@@ -22,6 +22,7 @@ import {
 import { useEquippedAccessory } from '@/api/shop';
 import { SealCharacter, StampMark } from '@/components/seal-character';
 import { StampSplash } from '@/components/stamp-splash';
+import { sealLevel } from '@/constants/seal-growth';
 import { SealoColors, SealoShadow } from '@/constants/sealo-theme';
 import { silenceRoutineForToday, useRoutineAlarmSync } from '@/notifications/routine-alarms';
 
@@ -40,7 +41,14 @@ function sealMessage(routines: TodayRoutine[] | undefined): string {
   if (!routines || routines.length === 0) return '첫 루틴을 만들어볼까? 🦭';
   const remaining = routines.filter((r) => !r.completed).length;
   if (remaining === 0) return '오늘 도장 다 찍었어! 최고야!';
-  return `오늘 ${remaining}개 남았어, 화이팅!`;
+
+  // 시간대별 인사 (M5) — 물범이 하루의 흐름을 같이 산다
+  const hour = new Date().getHours();
+  if (hour < 5) return `이 시간까지 깨어있어? 얼른 자야지…`;
+  if (hour < 11) return `좋은 아침! 오늘 ${remaining}개, 가볍게 가자`;
+  if (hour < 17) return `오늘 ${remaining}개 남았어, 화이팅!`;
+  if (hour < 21) return `저녁이야~ 남은 ${remaining}개 마무리하자`;
+  return `자기 전에 ${remaining}개만 딱 찍자!`;
 }
 
 export default function HomeScreen() {
@@ -79,7 +87,9 @@ export default function HomeScreen() {
         {lastEarned != null && <Text style={styles.earned}>🐚 +{lastEarned}</Text>}
         {(streak?.current ?? 0) > 0 && (
           <View style={styles.streakChip}>
-            <Text style={styles.streakText}>🔥 연속 {streak?.current}일</Text>
+            <Text style={styles.streakText}>
+              🔥 {streak?.current}일 · {sealLevel(streak?.current ?? 0).title}
+            </Text>
           </View>
         )}
       </View>

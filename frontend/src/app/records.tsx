@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useCalendar, useStreak } from '@/api/routines';
 import { StampMark } from '@/components/seal-character';
+import { daysToNextLevel, sealLevel } from '@/constants/seal-growth';
 import {
   SealoBorder,
   SealoColors,
@@ -45,6 +46,25 @@ export default function RecordsScreen() {
   }, [calendar]);
 
   const cells = useMemo(() => buildMonthCells(monthKey), [monthKey]);
+
+  // M5 인사이트: 이번 달 도장 찍힌 날들의 요일 분포에서 최고 요일 (2일 이상일 때만)
+  const bestWeekday = useMemo(() => {
+    if (!calendar || calendar.length < 2) return null;
+    const byWeekday = new Map<number, number>();
+    calendar.forEach((entry) => {
+      const weekday = new Date(entry.date + 'T00:00:00').getDay();
+      byWeekday.set(weekday, (byWeekday.get(weekday) ?? 0) + 1);
+    });
+    let best: number | null = null;
+    let bestCount = 1; // 최소 2일 이상이어야 의미
+    byWeekday.forEach((count, weekday) => {
+      if (count > bestCount) {
+        best = weekday;
+        bestCount = count;
+      }
+    });
+    return best != null ? WEEKDAY_LABELS[best] : null;
+  }, [calendar]);
   const todayKey = toMonthKey(new Date());
   const todayDate = new Date().getDate();
   const [year, month] = monthKey.split('-');
@@ -54,8 +74,24 @@ export default function RecordsScreen() {
       <Text style={styles.title}>기록</Text>
 
       <View style={styles.streakCard}>
-        <Text style={styles.streakText}>🔥 연속 {streak?.current ?? 0}일</Text>
+        <Text style={styles.streakText}>
+          🔥 연속 {streak?.current ?? 0}일 · {sealLevel(streak?.current ?? 0).title}
+        </Text>
+        {(() => {
+          const next = daysToNextLevel(streak?.current ?? 0);
+          return next ? (
+            <Text style={styles.nextLevel}>
+              다음 칭호 「{next.next.title}」까지 {next.days}일!
+            </Text>
+          ) : (
+            <Text style={styles.nextLevel}>최고 칭호 달성 — 물범이 절을 올립니다 🙇</Text>
+          );
+        })()}
       </View>
+
+      {bestWeekday != null && (
+        <Text style={styles.insight}>✨ 이번 달엔 {bestWeekday}요일에 가장 잘 지켰어요</Text>
+      )}
 
       <View style={styles.monthNav}>
         <Pressable onPress={() => setMonthKey(shiftMonth(monthKey, -1))} hitSlop={12}>
@@ -118,6 +154,18 @@ const styles = StyleSheet.create({
     marginBottom: SealoSpacing.md,
   },
   streakText: { ...SealoType.body },
+  nextLevel: {
+    ...SealoType.caption,
+    color: SealoColors.textSecondary,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  insight: {
+    textAlign: 'center',
+    color: SealoColors.textSecondary,
+    fontSize: 13,
+    marginBottom: SealoSpacing.sm,
+  },
   monthNav: {
     flexDirection: 'row',
     justifyContent: 'center',
