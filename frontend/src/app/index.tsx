@@ -126,6 +126,26 @@ export default function HomeScreen() {
         )}
       </View>
 
+      {routines != null && routines.length > 0 && (
+        <View style={styles.goalCard}>
+          <View style={styles.goalTrack}>
+            <View
+              style={[
+                styles.goalFill,
+                {
+                  width: `${Math.round(
+                    (routines.filter((r) => r.completed).length / routines.length) * 100,
+                  )}%`,
+                },
+              ]}
+            />
+          </View>
+          <Text style={styles.goalLabel}>
+            오늘 목표 {routines.filter((r) => r.completed).length}/{routines.length}
+          </Text>
+        </View>
+      )}
+
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>오늘의 루틴</Text>
         <Pressable
@@ -223,6 +243,22 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   streakText: { fontWeight: '700', color: SealoColors.ink },
+  goalCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 20,
+    marginTop: 4,
+  },
+  goalTrack: {
+    flex: 1,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: SealoColors.ice,
+    overflow: 'hidden',
+  },
+  goalFill: { height: '100%', backgroundColor: SealoColors.stampRed, borderRadius: 5 },
+  goalLabel: { fontSize: 12, fontWeight: '700', color: SealoColors.textSecondary },
   title: {
     fontSize: 22,
     fontWeight: '800',

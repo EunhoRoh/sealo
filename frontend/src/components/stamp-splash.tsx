@@ -1,7 +1,11 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import LottieView from 'lottie-react-native';
+
+// 도장 "쿵" 효과음 — 코드로 합성한 WAV (scratchpad/make-stamp-sound.js, docs/13 P2)
+const STAMP_SOUND = require('../../assets/sounds/stamp-thud.wav');
 
 /**
  * 도장 쾅 연출 — 네이티브(iOS/Android) 버전.
@@ -16,10 +20,18 @@ interface Props {
 }
 
 export function StampSplash({ visible, onDone }: Props) {
+  const player = useAudioPlayer(STAMP_SOUND);
+
   useEffect(() => {
     if (!visible) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-  }, [visible]);
+    try {
+      player.seekTo(0);
+      player.play();
+    } catch {
+      // 사운드 실패는 연출을 막지 않는다
+    }
+  }, [visible, player]);
 
   if (!visible) return null;
 

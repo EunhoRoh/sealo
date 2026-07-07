@@ -55,18 +55,33 @@ public class StampService {
         return stampRepository.countByDate(memberId, month.atDay(1), month.atEndOfMonth());
     }
 
+    public record StreakInfo(int current, int best) {
+    }
+
     /**
-     * 연속 달성일 수. 오늘 아직 안 찍었으면 어제까지의 연속도 유지로 인정.
-     * 조회 기간은 1년으로 제한 (그 이상의 스트릭은 365+로 표기해도 충분)
+     * 연속 달성일. current: 오늘 아직 안 찍었으면 어제까지의 연속도 유지로 인정.
+     * best: 최근 1년 내 최장 연속 (그 이상은 365+로 표기해도 충분)
      */
-    public int currentStreak(Long memberId, LocalDate today) {
-        var dates = Set.copyOf(stampRepository.findStampDatesSince(memberId, today.minusDays(365)));
+    public StreakInfo streak(Long memberId, LocalDate today) {
+        List<LocalDate> sorted = stampRepository.findStampDatesSince(memberId, today.minusDays(365))
+                .stream().sorted().toList();
+        Set<LocalDate> dates = Set.copyOf(sorted);
+
         LocalDate cursor = dates.contains(today) ? today : today.minusDays(1);
-        int streak = 0;
+        int current = 0;
         while (dates.contains(cursor)) {
-            streak++;
+            current++;
             cursor = cursor.minusDays(1);
         }
-        return streak;
+
+        int best = 0;
+        int run = 0;
+        LocalDate prev = null;
+        for (LocalDate date : sorted) {
+            run = (prev != null && prev.plusDays(1).equals(date)) ? run + 1 : 1;
+            best = Math.max(best, run);
+            prev = date;
+        }
+        return new StreakInfo(current, Math.max(best, current));
     }
 }

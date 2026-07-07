@@ -25,13 +25,10 @@ public class StampController {
         return stampService.calendar(memberId, month);
     }
 
-    public record StreakResponse(int current) {
-    }
-
-    /** 기록 탭 스트릭 — 연속 달성일 */
+    /** 기록 탭 스트릭 — 연속 달성일 (current) + 최근 1년 최장 (best) */
     @GetMapping("/streak")
-    public StreakResponse streak(
+    public StampService.StreakInfo streak(
             @RequestHeader(value = "X-Member-Id", defaultValue = "1") Long memberId) {
-        return new StreakResponse(stampService.currentStreak(memberId, java.time.LocalDate.now()));
+        return stampService.streak(memberId, java.time.LocalDate.now());
     }
 }

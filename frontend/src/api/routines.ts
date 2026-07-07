@@ -112,6 +112,7 @@ export function useCalendar(month: string) {
 export function useStreak() {
   return useQuery({
     queryKey: ["stamps", "streak"],
-    queryFn: async () => (await api.get<{ current: number }>("/api/stamps/streak")).data,
+    queryFn: async () =>
+      (await api.get<{ current: number; best: number }>("/api/stamps/streak")).data,
   });
 }

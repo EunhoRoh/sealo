@@ -76,6 +76,7 @@ export default function RecordsScreen() {
       <View style={styles.streakCard}>
         <Text style={styles.streakText}>
           🔥 연속 {streak?.current ?? 0}일 · {sealLevel(streak?.current ?? 0).title}
+          {(streak?.best ?? 0) > (streak?.current ?? 0) ? `  |  🏆 최고 ${streak?.best}일` : ''}
         </Text>
         {(() => {
           const next = daysToNextLevel(streak?.current ?? 0);

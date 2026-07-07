@@ -154,7 +154,8 @@ class RoutineApiTest {
 
         mockMvc.perform(get("/api/stamps/streak"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.current").value(1));
+                .andExpect(jsonPath("$.current").value(1))
+                .andExpect(jsonPath("$.best").value(1));
     }
 
     @Test
