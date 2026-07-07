@@ -22,6 +22,7 @@
 | [docs/08-상점기획.md](docs/08-상점기획.md) | 상점 카테고리 로드맵 + 가격 밸런스 |
 | [docs/09-소셜로그인-준비.md](docs/09-소셜로그인-준비.md) | 카카오/구글 키 발급 체크리스트 |
 | [docs/10-포트폴리오.md](docs/10-포트폴리오.md) | 면접·자소서용 의사결정/트러블슈팅 기록 |
+| [docs/11-시스템구성-배포.md](docs/11-시스템구성-배포.md) | 시스템 구조도, 실행 방법, 클라우드 배포 계획 |
 
 ## 실행 방법
 ```bash
@@ -35,6 +36,13 @@ cd frontend
 npm install
 npx expo start            # w=웹, 폰에서는 Expo Go로 QR 스캔
 ```
+
+## 다음 작업 (이어서 하기)
+> 세션을 새로 시작하면 여기부터 보세요. 작업 규칙은 [CLAUDE.md](CLAUDE.md).
+
+1. **Lottie 도장 애니메이션** — [stamp-seal-of-approval.svg](docs/assets/stamp-seal-of-approval.svg)를 Lottie Creator AI에 업로드해 제작 (Ethan) → JSON을 `frontend/assets/`에 넣으면 `stamp-splash.tsx` 내부만 교체
+2. **소셜 로그인 + JWT** — 카카오/구글 키 발급 대기 (Ethan, [docs/09](docs/09-소셜로그인-준비.md) 체크리스트)
+3. GitHub Actions CI (테스트 자동화) → 이후 배포 준비 ([docs/11](docs/11-시스템구성-배포.md) 체크리스트)
 
 ## 현재 상태
 - [x] 프로젝트 아이디어 확정 — 루틴 알림 앱 (2026-07-07)

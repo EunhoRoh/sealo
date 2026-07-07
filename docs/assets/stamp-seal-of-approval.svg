@@ -1,0 +1,27 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <!-- Sealo "Seal of Approval" 도장 — Lottie Creator 업로드용 단독 파일 (라벨 없음, 투명 배경) -->
+  <style>
+    .red { stroke: #C0392B; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .red-fill { fill: #C0392B; }
+  </style>
+  <g transform="translate(256,256)">
+    <circle class="red" r="230" stroke-width="14"/>
+    <circle class="red" r="162" stroke-width="8"/>
+    <defs>
+      <path id="topArc" d="M -190 0 A 190 190 0 0 1 190 0" fill="none"/>
+      <path id="bottomArc" d="M -190 0 A 190 190 0 0 0 190 0" fill="none"/>
+    </defs>
+    <text class="red-fill" font-size="46" font-weight="bold" letter-spacing="8">
+      <textPath href="#topArc" startOffset="50%" text-anchor="middle">SEAL OF APPROVAL</textPath>
+    </text>
+    <text class="red-fill" font-size="38" font-weight="bold" letter-spacing="11">
+      <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">· SEALO ·</textPath>
+    </text>
+    <!-- 중앙: 물범 얼굴 -->
+    <path class="red" stroke-width="11" d="M -76 22 Q -81 -49 0 -54 Q 81 -49 76 22 Q 70 70 0 76 Q -70 70 -76 22 Z"/>
+    <circle class="red-fill" cx="-30" cy="0" r="9.5"/>
+    <circle class="red-fill" cx="30" cy="0" r="9.5"/>
+    <path class="red" stroke-width="8" d="M -14 27 Q 0 38 14 27"/>
+    <path class="red" stroke-width="5.5" d="M -49 11 L -81 5 M 49 11 L 81 5"/>
+  </g>
+</svg>
