@@ -2,14 +2,16 @@ import { useEffect } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeOut, ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import LottieView from 'lottie-react-native';
 
 import { SealoColors } from '@/constants/sealo-theme';
 
 /**
  * 도장 쾅 연출의 유일한 렌더 지점 (Sealo의 핵심 손맛).
- * 지금은 Reanimated 스케일 바운스 + 햅틱.
- * Lottie JSON(docs/assets/stamp-designs.svg 기반 제작) 준비되면
- * 이 컴포넌트 내부만 lottie-react-native로 교체 — 화면 코드는 무수정 (docs/07)
+ * - 네이티브: Ethan이 Lottie Creator로 제작한 발도장 애니메이션 (stamp.json,
+ *   흰 배경은 스크립트로 투명 처리 — docs/10 트러블슈팅 참고)
+ * - 웹: lottie-react-native 웹 지원이 불안정하여 Reanimated 폴백 유지
+ * 에셋 교체 시 이 파일만 수정 (docs/07)
  */
 interface Props {
   visible: boolean;
@@ -17,19 +19,35 @@ interface Props {
   onDone: () => void;
 }
 
-const DURATION_MS = 900;
+const WEB_FALLBACK_DURATION_MS = 900;
 
 export function StampSplash({ visible, onDone }: Props) {
   useEffect(() => {
     if (!visible) return;
     if (Platform.OS !== 'web') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      return; // 네이티브는 Lottie onAnimationFinish가 종료를 알림
     }
-    const timer = setTimeout(onDone, DURATION_MS);
+    const timer = setTimeout(onDone, WEB_FALLBACK_DURATION_MS);
     return () => clearTimeout(timer);
   }, [visible, onDone]);
 
   if (!visible) return null;
+
+  if (Platform.OS !== 'web') {
+    return (
+      <View style={styles.overlay} pointerEvents="none">
+        <LottieView
+          source={require('../../assets/animations/stamp.json')}
+          autoPlay
+          loop={false}
+          speed={1.4}
+          onAnimationFinish={onDone}
+          style={styles.lottie}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.overlay} pointerEvents="none">
@@ -55,6 +73,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 10,
   },
+  lottie: { width: 260, height: 260 },
   stamp: {
     width: 150,
     height: 150,

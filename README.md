@@ -40,9 +40,10 @@ npx expo start            # w=웹, 폰에서는 Expo Go로 QR 스캔
 ## 다음 작업 (이어서 하기)
 > 세션을 새로 시작하면 여기부터 보세요. 작업 규칙은 [CLAUDE.md](CLAUDE.md).
 
-1. **Lottie 도장 애니메이션** — [stamp-seal-of-approval.svg](docs/assets/stamp-seal-of-approval.svg)를 Lottie Creator AI에 업로드해 제작 (Ethan) → JSON을 `frontend/assets/`에 넣으면 `stamp-splash.tsx` 내부만 교체
-2. **소셜 로그인 + JWT** — 카카오/구글 키 발급 대기 (Ethan, [docs/09](docs/09-소셜로그인-준비.md) 체크리스트)
+1. **소셜 로그인 + JWT** — 카카오/구글 키 발급 대기 (Ethan, [docs/09](docs/09-소셜로그인-준비.md) 체크리스트)
+2. **하프물범 시안 v2** — 마스코트가 하프물범 새끼로 확정(결정로그 #20). seal-poses.svg를 솜뭉치 체형+큰 검은 눈으로 갱신, 이후 일러스트/Lottie화
 3. GitHub Actions CI (테스트 자동화) → 이후 배포 준비 ([docs/11](docs/11-시스템구성-배포.md) 체크리스트)
+4. 실기기에서 Lottie 도장 연출 확인 (Expo Go, 웹은 폴백이라 네이티브에서 봐야 함)
 
 ## 현재 상태
 - [x] 프로젝트 아이디어 확정 — 루틴 알림 앱 (2026-07-07)
