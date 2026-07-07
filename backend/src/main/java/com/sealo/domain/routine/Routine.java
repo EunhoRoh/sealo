@@ -63,8 +63,26 @@ public class Routine extends BaseTimeEntity {
         this.alarmEnabled = true;
     }
 
+    public void update(String name, String icon, LocalTime alarmTime, Set<DayOfWeek> days, boolean alarmEnabled) {
+        this.name = name;
+        this.icon = icon;
+        this.alarmTime = alarmTime;
+        this.repeatDays = toBitmask(days);
+        this.alarmEnabled = alarmEnabled;
+    }
+
     public boolean isScheduledOn(DayOfWeek day) {
         return (repeatDays & bit(day)) != 0;
+    }
+
+    public Set<DayOfWeek> getDays() {
+        Set<DayOfWeek> days = java.util.EnumSet.noneOf(DayOfWeek.class);
+        for (DayOfWeek day : DayOfWeek.values()) {
+            if (isScheduledOn(day)) {
+                days.add(day);
+            }
+        }
+        return days;
     }
 
     private static int toBitmask(Set<DayOfWeek> days) {

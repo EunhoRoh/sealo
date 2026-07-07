@@ -1,98 +1,263 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import {
+  TodayRoutine,
+  useCreateRoutine,
+  useStampRoutine,
+  useTodayRoutines,
+} from '@/api/routines';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
+const STAMP_RED = '#C0392B';
+const ALL_DAYS = [
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+  'SUNDAY',
+];
+
+function sealMessage(routines: TodayRoutine[] | undefined): string {
+  if (!routines || routines.length === 0) return '첫 루틴을 만들어볼까? 🦭';
+  const remaining = routines.filter((r) => !r.completed).length;
+  if (remaining === 0) return '오늘 도장 다 찍었어! 최고야!';
+  return `오늘 ${remaining}개 남았어, 화이팅!`;
 }
 
 export default function HomeScreen() {
+  const { data: routines, isLoading, isError } = useTodayRoutines();
+  const stamp = useStampRoutine();
+  const [lastEarned, setLastEarned] = useState<number | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+
+  const bubbleMessage = useMemo(() => sealMessage(routines), [routines]);
+
+  const onStamp = (routine: TodayRoutine) => {
+    if (routine.completed || stamp.isPending) return;
+    stamp.mutate(routine.id, {
+      onSuccess: (result) => setLastEarned(result.earnedShells),
+    });
+  };
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <Text style={styles.title}>Sealo</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      {/* 물범 영역 — TODO: 라인 드로잉 일러스트로 교체 (docs/assets/seal-poses.svg) */}
+      <View style={styles.sealArea}>
+        <Text style={styles.seal}>🦭</Text>
+        <View style={styles.bubble}>
+          <Text style={styles.bubbleText}>{bubbleMessage}</Text>
+        </View>
+        {lastEarned != null && <Text style={styles.earned}>🐚 +{lastEarned}</Text>}
+      </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
+      <View style={styles.listHeader}>
+        <Text style={styles.listTitle}>오늘의 루틴</Text>
+        <Pressable onPress={() => setShowAdd(true)} hitSlop={8}>
+          <Text style={styles.addButton}>+ 추가</Text>
+        </Pressable>
+      </View>
+
+      {isLoading && <ActivityIndicator style={styles.center} />}
+      {isError && (
+        <Text style={styles.errorText}>
+          서버에 연결할 수 없어요. 백엔드가 켜져 있는지 확인해주세요.
+        </Text>
+      )}
+
+      <FlatList
+        data={routines}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          !isLoading && !isError ? (
+            <Text style={styles.emptyText}>아직 루틴이 없어요. 하나 만들어볼까요?</Text>
+          ) : null
+        }
+        renderItem={({ item }) => (
+          <Pressable
+            onPress={() => onStamp(item)}
+            style={[styles.routineRow, item.completed && styles.routineRowDone]}>
+            <Text style={styles.routineIcon}>{item.icon}</Text>
+            <View style={styles.routineInfo}>
+              <Text style={[styles.routineName, item.completed && styles.routineNameDone]}>
+                {item.name}
+              </Text>
+              <Text style={styles.routineTime}>{item.alarmTime.slice(0, 5)}</Text>
+            </View>
+            <Text style={styles.stampMark}>{item.completed ? '🦭' : '⬜'}</Text>
+          </Pressable>
+        )}
+      />
+
+      <AddRoutineModal visible={showAdd} onClose={() => setShowAdd(false)} />
+    </SafeAreaView>
+  );
+}
+
+function AddRoutineModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const create = useCreateRoutine();
+  const [name, setName] = useState('');
+  const [icon, setIcon] = useState('⭐');
+  const [time, setTime] = useState('08:00');
+
+  const valid = name.trim().length > 0 && /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
+
+  const onSave = () => {
+    if (!valid || create.isPending) return;
+    create.mutate(
+      { name: name.trim(), icon, alarmTime: time, days: ALL_DAYS },
+      {
+        onSuccess: () => {
+          setName('');
+          setTime('08:00');
+          onClose();
+        },
+      },
+    );
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.modalBackdrop}>
+        <View style={styles.modalSheet}>
+          <Text style={styles.modalTitle}>루틴 만들기</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="이름 (예: 점심 산책)"
+            value={name}
+            onChangeText={setName}
+            maxLength={30}
           />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={[styles.input, styles.inputSmall]}
+              placeholder="아이콘"
+              value={icon}
+              onChangeText={setIcon}
+              maxLength={2}
+            />
+            <TextInput
+              style={[styles.input, styles.inputSmall]}
+              placeholder="HH:MM"
+              value={time}
+              onChangeText={setTime}
+              maxLength={5}
+            />
+          </View>
+          <Text style={styles.modalHint}>반복: 매일 (요일 선택은 곧 추가돼요)</Text>
+          <View style={styles.modalButtons}>
+            <Pressable onPress={onClose} style={styles.cancelButton}>
+              <Text>취소</Text>
+            </Pressable>
+            <Pressable
+              onPress={onSave}
+              style={[styles.saveButton, !valid && styles.saveButtonDisabled]}>
+              <Text style={styles.saveButtonText}>저장</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
   title: {
+    fontSize: 22,
+    fontWeight: '800',
     textAlign: 'center',
+    marginVertical: 8,
   },
-  code: {
-    textTransform: 'uppercase',
+  sealArea: { alignItems: 'center', paddingVertical: 12 },
+  seal: { fontSize: 72 },
+  bubble: {
+    marginTop: 8,
+    borderWidth: 1.5,
+    borderColor: '#111',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  bubbleText: { fontSize: 14 },
+  earned: { marginTop: 6, fontSize: 14, fontWeight: '700', color: STAMP_RED },
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 8,
   },
+  listTitle: { fontSize: 18, fontWeight: '700' },
+  addButton: { fontSize: 15, fontWeight: '600', color: STAMP_RED },
+  listContent: { paddingHorizontal: 20, paddingVertical: 8, gap: 8 },
+  routineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#111',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 12,
+    backgroundColor: '#FFF',
+  },
+  routineRowDone: { opacity: 0.5 },
+  routineIcon: { fontSize: 22 },
+  routineInfo: { flex: 1 },
+  routineName: { fontSize: 16, fontWeight: '600' },
+  routineNameDone: { textDecorationLine: 'line-through' },
+  routineTime: { fontSize: 12, color: '#666', marginTop: 2 },
+  stampMark: { fontSize: 20 },
+  center: { marginTop: 24 },
+  errorText: { textAlign: 'center', color: STAMP_RED, marginTop: 16, paddingHorizontal: 24 },
+  emptyText: { textAlign: 'center', color: '#666', marginTop: 24 },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  modalSheet: {
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    gap: 12,
+  },
+  modalTitle: { fontSize: 18, fontWeight: '700' },
+  input: {
+    borderWidth: 1.5,
+    borderColor: '#111',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+  },
+  inputRow: { flexDirection: 'row', gap: 12 },
+  inputSmall: { flex: 1 },
+  modalHint: { fontSize: 12, color: '#666' },
+  modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, marginTop: 4 },
+  cancelButton: { paddingVertical: 10, paddingHorizontal: 16 },
+  saveButton: {
+    backgroundColor: '#111',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+  },
+  saveButtonDisabled: { opacity: 0.3 },
+  saveButtonText: { color: '#FFF', fontWeight: '700' },
 });

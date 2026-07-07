@@ -1,0 +1,68 @@
+<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <!-- Sealo 물범 시안 v1 — 흑백 라인 드로잉, 포즈 3종 (대기 / 도장 쾅 / 축하) -->
+  <style>
+    .line { fill: none; stroke: #111; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .fill-white { fill: #fff; stroke: #111; stroke-width: 4; stroke-linejoin: round; }
+    .dot { fill: #111; }
+    .red { fill: #C0392B; }
+    .label { font-size: 15px; fill: #444; }
+  </style>
+
+  <!-- ============ 포즈 1: 대기 (뒹굴) ============ -->
+  <g transform="translate(30,40)">
+    <!-- 몸통: 옆으로 누운 물방울 형태 -->
+    <path class="fill-white" d="M30 170 Q20 120 60 95 Q105 65 160 82 Q215 100 225 145 Q231 172 210 182 Q160 200 95 196 Q45 193 30 170 Z"/>
+    <!-- 꼬리 지느러미 -->
+    <path class="fill-white" d="M222 150 Q250 135 258 118 Q253 142 244 156 Q256 158 268 152 Q252 172 228 168 Z"/>
+    <!-- 앞 지느러미 -->
+    <path class="line" d="M120 190 Q135 178 152 184"/>
+    <!-- 얼굴 -->
+    <circle class="dot" cx="78" cy="120" r="5"/>
+    <circle class="dot" cx="118" cy="120" r="5"/>
+    <path class="line" d="M92 136 Q98 141 104 136"/>
+    <!-- 수염 -->
+    <path class="line" stroke-width="2.5" d="M60 130 L38 126 M60 138 L40 142 M136 130 L158 126 M136 138 L156 142"/>
+    <text class="label" x="95" y="235" text-anchor="middle">① 대기 — 뒹굴뒹굴</text>
+  </g>
+
+  <!-- ============ 포즈 2: 도장 쾅 ============ -->
+  <g transform="translate(330,25)">
+    <!-- 몸통: 상체 세운 자세 -->
+    <path class="fill-white" d="M75 210 Q55 160 68 110 Q80 68 120 62 Q160 68 172 110 Q185 160 165 210 Q120 228 75 210 Z"/>
+    <!-- 얼굴 (집중 - 감은 눈 ><) -->
+    <path class="line" d="M98 105 L110 112 L98 119 M142 105 L130 112 L142 119"/>
+    <path class="line" d="M114 130 Q120 135 126 130"/>
+    <path class="line" stroke-width="2.5" d="M88 118 L66 114 M88 126 L68 130 M152 118 L174 114 M152 126 L172 130"/>
+    <!-- 두 지느러미로 도장 들기 -->
+    <path class="line" d="M85 160 Q110 150 128 158 M172 150 Q150 142 132 152"/>
+    <!-- 도장 -->
+    <rect class="fill-white" x="118" y="128" width="26" height="34" rx="6" transform="rotate(18 131 145)"/>
+    <rect class="dot" x="114" y="158" width="36" height="12" rx="3" transform="rotate(18 132 164)"/>
+    <!-- 임팩트 라인 (쾅!) -->
+    <path class="line" stroke-width="3" d="M170 190 L186 198 M175 175 L193 178 M162 202 L174 214"/>
+    <!-- 찍힌 도장 자국 -->
+    <g transform="translate(196,208)">
+      <circle class="red" opacity="0.15" r="20"/>
+      <circle fill="none" stroke="#C0392B" stroke-width="3" r="16"/>
+      <path fill="none" stroke="#C0392B" stroke-width="3" d="M-7 0 L-2 6 L8 -6"/>
+    </g>
+    <text class="label" x="120" y="250" text-anchor="middle">② 도장 쾅! — 루틴 완료</text>
+  </g>
+
+  <!-- ============ 포즈 3: 축하 (만세) ============ -->
+  <g transform="translate(630,25)">
+    <!-- 몸통 -->
+    <path class="fill-white" d="M75 210 Q55 160 68 110 Q80 68 120 62 Q160 68 172 110 Q185 160 165 210 Q120 228 75 210 Z"/>
+    <!-- 얼굴 (기쁨 - 웃는 눈) -->
+    <path class="line" d="M92 112 Q100 104 108 112 M132 112 Q140 104 148 112"/>
+    <path class="line" d="M108 128 Q120 140 132 128"/>
+    <path class="line" stroke-width="2.5" d="M84 120 L62 116 M84 128 L64 132 M156 120 L178 116 M156 128 L176 132"/>
+    <!-- 만세 지느러미 -->
+    <path class="line" d="M80 150 Q58 130 52 108 M164 150 Q186 130 192 108"/>
+    <!-- 반짝이 + 조개 -->
+    <path class="line" stroke-width="3" d="M48 78 L48 92 M41 85 L55 85 M198 70 L198 84 M191 77 L205 77"/>
+    <path class="fill-white" d="M110 30 Q120 18 130 30 Q132 40 120 46 Q108 40 110 30 Z"/>
+    <path class="line" stroke-width="2.5" d="M114 32 L114 42 M120 30 L120 44 M126 32 L126 42"/>
+    <text class="label" x="120" y="250" text-anchor="middle">③ 축하 — 하루 전체 달성</text>
+  </g>
+</svg>
