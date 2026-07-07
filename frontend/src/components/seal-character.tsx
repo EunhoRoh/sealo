@@ -16,17 +16,41 @@ const POSE_ASSET: Record<SealPose, string> = {
   celebrate: '🦭🎉',
 };
 
+/**
+ * 상점 아이템 assetKey → 렌더 자산.
+ * 서버는 논리 키만 알고, 실제 그림은 여기서만 결정 (이미지 교체 시 이 맵만 수정)
+ */
+const ACCESSORY_ASSET: Record<string, string> = {
+  acc_starfish_pin: '⭐',
+  acc_seaweed_scarf: '🧣',
+  acc_round_glasses: '👓',
+  acc_straw_hat: '👒',
+  acc_sailor_hat: '⛵',
+  acc_conch_hat: '🐚',
+};
+
+export function accessoryAsset(assetKey: string): string {
+  return ACCESSORY_ASSET[assetKey] ?? '🎁';
+}
+
 interface Props {
   pose?: SealPose;
   size?: 'sm' | 'lg';
   /** 말풍선 문구. 없으면 말풍선 미표시 */
   message?: string;
+  /** 착용 중인 꾸미기 아이템 assetKey */
+  accessoryKey?: string;
 }
 
-export function SealCharacter({ pose = 'idle', size = 'lg', message }: Props) {
+export function SealCharacter({ pose = 'idle', size = 'lg', message, accessoryKey }: Props) {
   return (
     <View style={styles.container}>
-      <Text style={size === 'lg' ? styles.sealLg : styles.sealSm}>{POSE_ASSET[pose]}</Text>
+      <View>
+        <Text style={size === 'lg' ? styles.sealLg : styles.sealSm}>{POSE_ASSET[pose]}</Text>
+        {accessoryKey != null && (
+          <Text style={styles.accessory}>{accessoryAsset(accessoryKey)}</Text>
+        )}
+      </View>
       {message != null && (
         <View style={styles.bubble}>
           <Text style={styles.bubbleText}>{message}</Text>
@@ -45,6 +69,13 @@ const styles = StyleSheet.create({
   container: { alignItems: 'center' },
   sealLg: { fontSize: 72 },
   sealSm: { fontSize: 28 },
+  accessory: {
+    position: 'absolute',
+    top: -12,
+    right: -6,
+    fontSize: 26,
+    transform: [{ rotate: '15deg' }],
+  },
   bubble: {
     marginTop: SealoSpacing.sm,
     borderWidth: SealoBorder.width,

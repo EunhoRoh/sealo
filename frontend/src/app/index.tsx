@@ -17,6 +17,7 @@ import {
   useStampRoutine,
   useTodayRoutines,
 } from '@/api/routines';
+import { useEquippedAccessory } from '@/api/shop';
 import { SealCharacter, StampMark } from '@/components/seal-character';
 import { SealoColors } from '@/constants/sealo-theme';
 import { useRoutineAlarmSync } from '@/notifications/routine-alarms';
@@ -43,6 +44,7 @@ export default function HomeScreen() {
   useRoutineAlarmSync(); // 루틴 변경 시 로컬 알림 재등록
   const { data: routines, isLoading, isError } = useTodayRoutines();
   const stamp = useStampRoutine();
+  const equippedAccessory = useEquippedAccessory();
   const [lastEarned, setLastEarned] = useState<number | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
@@ -63,6 +65,7 @@ export default function HomeScreen() {
         <SealCharacter
           pose={routines?.length && routines.every((r) => r.completed) ? 'celebrate' : 'idle'}
           message={bubbleMessage}
+          accessoryKey={equippedAccessory}
         />
         {lastEarned != null && <Text style={styles.earned}>🐚 +{lastEarned}</Text>}
       </View>
