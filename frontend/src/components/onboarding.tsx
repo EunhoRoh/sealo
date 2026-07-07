@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react';
 import {
-  Dimensions,
   FlatList,
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -55,13 +55,14 @@ const PAGES: Page[] = [
 export function Onboarding({ onStart }: Props) {
   const [page, setPage] = useState(0);
   const listRef = useRef<FlatList<Page>>(null);
-  const width = Dimensions.get('window').width;
+  const { width } = useWindowDimensions();
   const isLast = page === PAGES.length - 1;
 
   const goNext = () => {
-    if (!isLast) {
-      listRef.current?.scrollToIndex({ index: page + 1, animated: true });
-    }
+    if (isLast) return;
+    const next = page + 1;
+    setPage(next); // 웹에서는 스크롤 이벤트가 안 올 수 있어 상태를 직접 갱신
+    listRef.current?.scrollToIndex({ index: next, animated: true });
   };
 
   return (
@@ -73,6 +74,8 @@ export function Onboarding({ onStart }: Props) {
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
+        // scrollToIndex는 getItemLayout 없이 호출하면 에러 → 버튼이 무반응처럼 보임
+        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
         onMomentumScrollEnd={(e) =>
           setPage(Math.round(e.nativeEvent.contentOffset.x / width))
         }
