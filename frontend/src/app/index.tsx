@@ -15,16 +15,18 @@ import {
   AlarmType,
   TodayRoutine,
   useCreateRoutine,
+  useDeleteRoutine,
   useStampRoutine,
   useStreak,
   useTodayRoutines,
 } from '@/api/routines';
-import { useEquippedAccessory } from '@/api/shop';
+import { useEquippedAccessory, useMe } from '@/api/shop';
 import { SealCharacter, StampMark } from '@/components/seal-character';
 import { StampSplash } from '@/components/stamp-splash';
 import { sealLevel } from '@/constants/seal-growth';
 import { SealoColors, SealoShadow } from '@/constants/sealo-theme';
 import { silenceRoutineForToday, useRoutineAlarmSync } from '@/notifications/routine-alarms';
+import { confirmAction } from '@/utils/notify';
 
 const STAMP_RED = SealoColors.stampRed;
 const ALL_DAYS = [
@@ -55,7 +57,10 @@ export default function HomeScreen() {
   useRoutineAlarmSync(); // 루틴 변경 시 로컬 알림 재등록
   const { data: routines, isLoading, isError } = useTodayRoutines();
   const { data: streak } = useStreak();
+  const { data: me } = useMe();
   const stamp = useStampRoutine();
+  const removeRoutine = useDeleteRoutine();
+  const create = useCreateRoutine();
   const equippedAccessory = useEquippedAccessory();
   const [lastEarned, setLastEarned] = useState<number | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -74,9 +79,31 @@ export default function HomeScreen() {
     });
   };
 
+  const onDeleteRoutine = (routine: TodayRoutine) => {
+    confirmAction(`"${routine.name}" 루틴을 삭제할까요?`, () => removeRoutine.mutate(routine.id));
+  };
+
+  /** 첫 사용자용 — 물범 추천 루틴 3개 원탭 생성 (docs/13 P0) */
+  const seedStarterRoutines = async () => {
+    if (create.isPending) return;
+    const starters = [
+      { name: '기상', icon: '🌅', alarmTime: '07:00', days: ALL_DAYS, alarmType: 'LOUD' as AlarmType },
+      { name: '물 한 잔', icon: '💧', alarmTime: '09:00', days: ALL_DAYS, alarmType: 'GENTLE' as AlarmType },
+      { name: '취침 준비', icon: '🌙', alarmTime: '23:00', days: ALL_DAYS, alarmType: 'LOUD' as AlarmType },
+    ];
+    for (const starter of starters) {
+      await create.mutateAsync(starter).catch(() => {});
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Text style={styles.title}>Sealo</Text>
+      <View style={styles.homeHeader}>
+        <Text style={styles.title}>Sealo</Text>
+        <View style={styles.balanceBadge}>
+          <Text style={styles.balanceText}>🐚 {me?.shellBalance ?? 0}</Text>
+        </View>
+      </View>
 
       <View style={styles.sealArea}>
         <SealCharacter
@@ -114,12 +141,20 @@ export default function HomeScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           !isLoading && !isError ? (
-            <Text style={styles.emptyText}>아직 루틴이 없어요. 하나 만들어볼까요?</Text>
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyText}>아직 루틴이 없어요.</Text>
+              <Pressable style={styles.starterButton} onPress={seedStarterRoutines}>
+                <Text style={styles.starterButtonText}>🦭 물범 추천 루틴으로 시작하기</Text>
+              </Pressable>
+              <Text style={styles.starterHint}>기상 · 물 한 잔 · 취침 준비 3개를 만들어줘요</Text>
+            </View>
           ) : null
         }
         renderItem={({ item }) => (
           <Pressable
             onPress={() => onStamp(item)}
+            onLongPress={() => onDeleteRoutine(item)}
+            delayLongPress={500}
             style={[styles.routineRow, item.completed && styles.routineRowDone]}>
             <Text style={styles.routineIcon}>{item.icon}</Text>
             <View style={styles.routineInfo}>
@@ -224,6 +259,31 @@ function AddRoutineModal({ visible, onClose }: { visible: boolean; onClose: () =
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: SealoColors.background },
+  homeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  balanceBadge: {
+    position: 'absolute',
+    right: 20,
+    borderWidth: 1.5,
+    borderColor: SealoColors.ink,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: SealoColors.surface,
+  },
+  balanceText: { fontWeight: '700', color: SealoColors.ink },
+  emptyBox: { alignItems: 'center', marginTop: 24, gap: 12 },
+  starterButton: {
+    backgroundColor: SealoColors.ink,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 22,
+  },
+  starterButtonText: { color: SealoColors.surface, fontWeight: '700', fontSize: 15 },
+  starterHint: { fontSize: 12, color: SealoColors.textSecondary },
   streakChip: {
     marginTop: 8,
     backgroundColor: SealoColors.ice,

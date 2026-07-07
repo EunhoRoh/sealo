@@ -8,3 +8,15 @@ export function notify(message: string) {
     Alert.alert('Sealo', message);
   }
 }
+
+/** 확인 후 실행 (삭제 등 파괴적 동작용) */
+export function confirmAction(message: string, onConfirm: () => void) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(message)) onConfirm();
+    return;
+  }
+  Alert.alert('Sealo', message, [
+    { text: '취소', style: 'cancel' },
+    { text: '확인', style: 'destructive', onPress: onConfirm },
+  ]);
+}

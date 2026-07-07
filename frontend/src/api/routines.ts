@@ -73,6 +73,17 @@ export function useCreateRoutine() {
   });
 }
 
+export function useDeleteRoutine() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (routineId: number) =>
+      (await api.delete(`/api/routines/${routineId}`)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["routines"] });
+    },
+  });
+}
+
 export interface DailyStampCount {
   date: string; // "2026-07-07"
   count: number;

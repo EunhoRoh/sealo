@@ -116,6 +116,30 @@ export async function syncRoutineAlarms(routines: Routine[]): Promise<void> {
   for (const routine of routines) {
     await scheduleRoutine(routine);
   }
+  if (routines.length > 0) {
+    await scheduleDailyStreakGuard();
+  }
+}
+
+/**
+ * 저녁 스트릭 지킴 알림 (docs/13 P0) — 듀오링고식 손실 회피 장치.
+ * 매일 21:30 한 번, 잊고 있던 사용자를 잡아준다.
+ */
+async function scheduleDailyStreakGuard(): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    identifier: 'daily-streak-guard',
+    content: {
+      title: 'Sealo 🦭',
+      body: '오늘 도장 다 찍었어? 자기 전에 확인하자, 스트릭 지켜야지 🔥',
+      sound: 'default',
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
+      hour: 21,
+      minute: 30,
+      channelId: Platform.OS === 'android' ? ANDROID_CHANNEL_ID : undefined,
+    },
+  });
 }
 
 /**
