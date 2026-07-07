@@ -4,6 +4,8 @@ import com.sealo.domain.member.Member;
 import com.sealo.global.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -53,22 +55,31 @@ public class Routine extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean alarmEnabled;
 
+    /** 따르릉 모드 여부 (docs/12 M1) */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private AlarmType alarmType;
+
     @Builder
-    private Routine(Member member, String name, String icon, LocalTime alarmTime, Set<DayOfWeek> days) {
+    private Routine(Member member, String name, String icon, LocalTime alarmTime, Set<DayOfWeek> days,
+                    AlarmType alarmType) {
         this.member = member;
         this.name = name;
         this.icon = icon;
         this.alarmTime = alarmTime;
         this.repeatDays = toBitmask(days);
         this.alarmEnabled = true;
+        this.alarmType = alarmType != null ? alarmType : AlarmType.GENTLE;
     }
 
-    public void update(String name, String icon, LocalTime alarmTime, Set<DayOfWeek> days, boolean alarmEnabled) {
+    public void update(String name, String icon, LocalTime alarmTime, Set<DayOfWeek> days, boolean alarmEnabled,
+                       AlarmType alarmType) {
         this.name = name;
         this.icon = icon;
         this.alarmTime = alarmTime;
         this.repeatDays = toBitmask(days);
         this.alarmEnabled = alarmEnabled;
+        this.alarmType = alarmType != null ? alarmType : this.alarmType;
     }
 
     public boolean isScheduledOn(DayOfWeek day) {

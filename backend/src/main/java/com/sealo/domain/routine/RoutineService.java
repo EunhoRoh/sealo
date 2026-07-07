@@ -34,6 +34,7 @@ public class RoutineService {
                 .icon(request.icon())
                 .alarmTime(request.alarmTime())
                 .days(request.days())
+                .alarmType(request.alarmType())
                 .build();
         return RoutineResponse.from(routineRepository.save(routine));
     }
@@ -60,7 +61,8 @@ public class RoutineService {
     public RoutineResponse update(Long memberId, Long routineId, RoutineRequest request) {
         Routine routine = getOwned(memberId, routineId);
         boolean alarmEnabled = request.alarmEnabled() == null || request.alarmEnabled();
-        routine.update(request.name(), request.icon(), request.alarmTime(), request.days(), alarmEnabled);
+        routine.update(request.name(), request.icon(), request.alarmTime(), request.days(), alarmEnabled,
+                request.alarmType());
         return RoutineResponse.from(routine);
     }
 

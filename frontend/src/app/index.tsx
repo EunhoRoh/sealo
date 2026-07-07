@@ -12,16 +12,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
+  AlarmType,
   TodayRoutine,
   useCreateRoutine,
   useStampRoutine,
+  useStreak,
   useTodayRoutines,
 } from '@/api/routines';
 import { useEquippedAccessory } from '@/api/shop';
 import { SealCharacter, StampMark } from '@/components/seal-character';
 import { StampSplash } from '@/components/stamp-splash';
-import { SealoColors } from '@/constants/sealo-theme';
-import { useRoutineAlarmSync } from '@/notifications/routine-alarms';
+import { SealoColors, SealoShadow } from '@/constants/sealo-theme';
+import { silenceRoutineForToday, useRoutineAlarmSync } from '@/notifications/routine-alarms';
 
 const STAMP_RED = SealoColors.stampRed;
 const ALL_DAYS = [
@@ -44,6 +46,7 @@ function sealMessage(routines: TodayRoutine[] | undefined): string {
 export default function HomeScreen() {
   useRoutineAlarmSync(); // 루틴 변경 시 로컬 알림 재등록
   const { data: routines, isLoading, isError } = useTodayRoutines();
+  const { data: streak } = useStreak();
   const stamp = useStampRoutine();
   const equippedAccessory = useEquippedAccessory();
   const [lastEarned, setLastEarned] = useState<number | null>(null);
@@ -58,6 +61,7 @@ export default function HomeScreen() {
       onSuccess: (result) => {
         setLastEarned(result.earnedShells);
         setShowSplash(true); // 도장 쾅 연출
+        silenceRoutineForToday(routine.id).catch(() => {}); // 오늘 남은 따르릉 끄기
       },
     });
   };
@@ -73,6 +77,11 @@ export default function HomeScreen() {
           accessoryKey={equippedAccessory}
         />
         {lastEarned != null && <Text style={styles.earned}>🐚 +{lastEarned}</Text>}
+        {(streak?.current ?? 0) > 0 && (
+          <View style={styles.streakChip}>
+            <Text style={styles.streakText}>🔥 연속 {streak?.current}일</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.listHeader}>
@@ -125,13 +134,14 @@ function AddRoutineModal({ visible, onClose }: { visible: boolean; onClose: () =
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('⭐');
   const [time, setTime] = useState('08:00');
+  const [alarmType, setAlarmType] = useState<AlarmType>('GENTLE');
 
   const valid = name.trim().length > 0 && /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
 
   const onSave = () => {
     if (!valid || create.isPending) return;
     create.mutate(
-      { name: name.trim(), icon, alarmTime: time, days: ALL_DAYS },
+      { name: name.trim(), icon, alarmTime: time, days: ALL_DAYS, alarmType },
       {
         onSuccess: () => {
           setName('');
@@ -170,6 +180,21 @@ function AddRoutineModal({ visible, onClose }: { visible: boolean; onClose: () =
               maxLength={5}
             />
           </View>
+          <Pressable
+            style={[styles.tarrungToggle, alarmType === 'LOUD' && styles.tarrungToggleOn]}
+            onPress={() => setAlarmType(alarmType === 'LOUD' ? 'GENTLE' : 'LOUD')}>
+            <Text style={styles.tarrungIcon}>{alarmType === 'LOUD' ? '🔔' : '🔕'}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.tarrungTitle}>
+                따르릉 모드 {alarmType === 'LOUD' ? 'ON' : 'OFF'}
+              </Text>
+              <Text style={styles.tarrungDesc}>
+                {alarmType === 'LOUD'
+                  ? '도장 찍을 때까지 물범이 3번 깨워요 (0·3·7분)'
+                  : '한 번만 조용히 알려줘요'}
+              </Text>
+            </View>
+          </Pressable>
           <Text style={styles.modalHint}>반복: 매일 (요일 선택은 곧 추가돼요)</Text>
           <View style={styles.modalButtons}>
             <Pressable onPress={onClose} style={styles.cancelButton}>
@@ -188,7 +213,28 @@ function AddRoutineModal({ visible, onClose }: { visible: boolean; onClose: () =
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: SealoColors.background },
+  streakChip: {
+    marginTop: 8,
+    backgroundColor: SealoColors.ice,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+  },
+  streakText: { fontWeight: '700', color: SealoColors.ink },
+  tarrungToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: SealoColors.ink,
+    borderRadius: 10,
+    padding: 12,
+  },
+  tarrungToggleOn: { backgroundColor: SealoColors.todayHighlight, borderColor: SealoColors.stampRed },
+  tarrungIcon: { fontSize: 22 },
+  tarrungTitle: { fontWeight: '700', color: SealoColors.ink },
+  tarrungDesc: { fontSize: 12, color: SealoColors.textSecondary, marginTop: 2 },
   title: {
     fontSize: 22,
     fontWeight: '800',
@@ -211,30 +257,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#111',
+    borderColor: SealoColors.ink,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 12,
-    backgroundColor: '#FFF',
+    backgroundColor: SealoColors.surface,
+    ...SealoShadow,
   },
   routineRowDone: { opacity: 0.5 },
   routineIcon: { fontSize: 22 },
   routineInfo: { flex: 1 },
   routineName: { fontSize: 16, fontWeight: '600' },
   routineNameDone: { textDecorationLine: 'line-through' },
-  routineTime: { fontSize: 12, color: '#666', marginTop: 2 },
+  routineTime: { fontSize: 12, color: SealoColors.textSecondary, marginTop: 2 },
   stampMark: { fontSize: 20 },
   center: { marginTop: 24 },
   errorText: { textAlign: 'center', color: STAMP_RED, marginTop: 16, paddingHorizontal: 24 },
-  emptyText: { textAlign: 'center', color: '#666', marginTop: 24 },
+  emptyText: { textAlign: 'center', color: SealoColors.textSecondary, marginTop: 24 },
   modalBackdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: SealoColors.backdrop,
   },
   modalSheet: {
-    backgroundColor: '#FFF',
+    backgroundColor: SealoColors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -243,7 +290,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: '700' },
   input: {
     borderWidth: 1.5,
-    borderColor: '#111',
+    borderColor: SealoColors.ink,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -251,15 +298,15 @@ const styles = StyleSheet.create({
   },
   inputRow: { flexDirection: 'row', gap: 12 },
   inputSmall: { flex: 1 },
-  modalHint: { fontSize: 12, color: '#666' },
+  modalHint: { fontSize: 12, color: SealoColors.textSecondary },
   modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, marginTop: 4 },
   cancelButton: { paddingVertical: 10, paddingHorizontal: 16 },
   saveButton: {
-    backgroundColor: '#111',
+    backgroundColor: SealoColors.ink,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 24,
   },
   saveButtonDisabled: { opacity: 0.3 },
-  saveButtonText: { color: '#FFF', fontWeight: '700' },
+  saveButtonText: { color: SealoColors.surface, fontWeight: '700' },
 });

@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { AlarmListener } from '@/components/alarm-listener';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { Onboarding } from '@/components/onboarding';
@@ -35,7 +36,12 @@ export default function TabLayout() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AnimatedSplashOverlay />
         {onboarded === false ? <Onboarding onStart={completeOnboarding} /> : null}
-        {onboarded === true ? <AppTabs /> : null}
+        {onboarded === true ? (
+          <>
+            <AppTabs />
+            <AlarmListener />
+          </>
+        ) : null}
       </ThemeProvider>
     </QueryClientProvider>
   );

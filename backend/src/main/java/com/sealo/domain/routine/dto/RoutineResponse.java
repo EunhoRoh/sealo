@@ -1,5 +1,6 @@
 package com.sealo.domain.routine.dto;
 
+import com.sealo.domain.routine.AlarmType;
 import com.sealo.domain.routine.Routine;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -11,7 +12,8 @@ public record RoutineResponse(
         String icon,
         LocalTime alarmTime,
         Set<DayOfWeek> days,
-        boolean alarmEnabled
+        boolean alarmEnabled,
+        AlarmType alarmType
 ) {
     public static RoutineResponse from(Routine routine) {
         return new RoutineResponse(
@@ -20,7 +22,8 @@ public record RoutineResponse(
                 routine.getIcon(),
                 routine.getAlarmTime(),
                 routine.getDays(),
-                routine.isAlarmEnabled()
+                routine.isAlarmEnabled(),
+                routine.getAlarmType()
         );
     }
 }

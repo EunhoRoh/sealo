@@ -10,6 +10,8 @@ export interface TodayRoutine {
   completed: boolean;
 }
 
+export type AlarmType = "GENTLE" | "LOUD"; // LOUD = 따르릉 모드 (단계별 재알림)
+
 export interface Routine {
   id: number;
   name: string;
@@ -17,6 +19,7 @@ export interface Routine {
   alarmTime: string; // "HH:mm:ss"
   days: string[]; // "MONDAY" ...
   alarmEnabled: boolean;
+  alarmType: AlarmType;
 }
 
 export interface StampResult {
@@ -31,6 +34,7 @@ export interface RoutineForm {
   icon: string;
   alarmTime: string; // "HH:mm"
   days: string[]; // "MONDAY" ...
+  alarmType: AlarmType;
 }
 
 export function useRoutines() {
