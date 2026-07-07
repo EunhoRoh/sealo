@@ -41,7 +41,8 @@ npx expo start            # w=웹, 폰에서는 Expo Go로 QR 스캔
 > 세션을 새로 시작하면 여기부터 보세요. 작업 규칙은 [CLAUDE.md](CLAUDE.md).
 
 1. **소셜 로그인 + JWT** — 카카오/구글 키 발급 대기 (Ethan, [docs/09](docs/09-소셜로그인-준비.md) 체크리스트)
-2. **하프물범 시안 v2** — 마스코트가 하프물범 새끼로 확정(결정로그 #20). seal-poses.svg를 솜뭉치 체형+큰 검은 눈으로 갱신, 이후 일러스트/Lottie화
+2. ~~하프물범 시안 v2~~ ✅ 완료 → 다음: 시안 확정 후 앱 내 이모지 플레이스홀더를 일러스트로 교체 (seal-character.tsx 한 곳)
+2-1. (선택) 도장 Lottie를 벡터로 재제작 — 용량 1MB→수십 KB (docs/10 A-4)
 3. GitHub Actions CI (테스트 자동화) → 이후 배포 준비 ([docs/11](docs/11-시스템구성-배포.md) 체크리스트)
 4. 실기기에서 Lottie 도장 연출 확인 (Expo Go, 웹은 폴백이라 네이티브에서 봐야 함)
 
