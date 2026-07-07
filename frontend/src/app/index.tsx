@@ -17,8 +17,11 @@ import {
   useStampRoutine,
   useTodayRoutines,
 } from '@/api/routines';
+import { SealCharacter, StampMark } from '@/components/seal-character';
+import { SealoColors } from '@/constants/sealo-theme';
+import { useRoutineAlarmSync } from '@/notifications/routine-alarms';
 
-const STAMP_RED = '#C0392B';
+const STAMP_RED = SealoColors.stampRed;
 const ALL_DAYS = [
   'MONDAY',
   'TUESDAY',
@@ -37,6 +40,7 @@ function sealMessage(routines: TodayRoutine[] | undefined): string {
 }
 
 export default function HomeScreen() {
+  useRoutineAlarmSync(); // 루틴 변경 시 로컬 알림 재등록
   const { data: routines, isLoading, isError } = useTodayRoutines();
   const stamp = useStampRoutine();
   const [lastEarned, setLastEarned] = useState<number | null>(null);
@@ -55,12 +59,11 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <Text style={styles.title}>Sealo</Text>
 
-      {/* 물범 영역 — TODO: 라인 드로잉 일러스트로 교체 (docs/assets/seal-poses.svg) */}
       <View style={styles.sealArea}>
-        <Text style={styles.seal}>🦭</Text>
-        <View style={styles.bubble}>
-          <Text style={styles.bubbleText}>{bubbleMessage}</Text>
-        </View>
+        <SealCharacter
+          pose={routines?.length && routines.every((r) => r.completed) ? 'celebrate' : 'idle'}
+          message={bubbleMessage}
+        />
         {lastEarned != null && <Text style={styles.earned}>🐚 +{lastEarned}</Text>}
       </View>
 
@@ -98,7 +101,7 @@ export default function HomeScreen() {
               </Text>
               <Text style={styles.routineTime}>{item.alarmTime.slice(0, 5)}</Text>
             </View>
-            <Text style={styles.stampMark}>{item.completed ? '🦭' : '⬜'}</Text>
+            {item.completed ? <StampMark /> : <Text style={styles.stampMark}>⬜</Text>}
           </Pressable>
         )}
       />
@@ -184,16 +187,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   sealArea: { alignItems: 'center', paddingVertical: 12 },
-  seal: { fontSize: 72 },
-  bubble: {
-    marginTop: 8,
-    borderWidth: 1.5,
-    borderColor: '#111',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  bubbleText: { fontSize: 14 },
   earned: { marginTop: 6, fontSize: 14, fontWeight: '700', color: STAMP_RED },
   listHeader: {
     flexDirection: 'row',

@@ -24,4 +24,14 @@ public class StampController {
             @RequestParam YearMonth month) {
         return stampService.calendar(memberId, month);
     }
+
+    public record StreakResponse(int current) {
+    }
+
+    /** 기록 탭 스트릭 — 연속 달성일 */
+    @GetMapping("/streak")
+    public StreakResponse streak(
+            @RequestHeader(value = "X-Member-Id", defaultValue = "1") Long memberId) {
+        return new StreakResponse(stampService.currentStreak(memberId, java.time.LocalDate.now()));
+    }
 }

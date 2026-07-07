@@ -143,6 +143,21 @@ class RoutineApiTest {
     }
 
     @Test
+    void 오늘_도장을_찍으면_스트릭이_1이_된다() throws Exception {
+        mockMvc.perform(get("/api/stamps/streak"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.current").value(0));
+
+        long id = createRoutine("점심 산책");
+        mockMvc.perform(post("/api/routines/" + id + "/stamp"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/stamps/streak"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.current").value(1));
+    }
+
+    @Test
     void 이름이_비어있으면_400() throws Exception {
         String invalid = objectMapper.writeValueAsString(Map.of(
                 "name", "",

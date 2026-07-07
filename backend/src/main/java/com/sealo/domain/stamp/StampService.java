@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,5 +53,20 @@ public class StampService {
     /** 기록 탭 캘린더 — 날짜별 도장 수 (단일 group by 쿼리) */
     public List<DailyStampCount> calendar(Long memberId, YearMonth month) {
         return stampRepository.countByDate(memberId, month.atDay(1), month.atEndOfMonth());
+    }
+
+    /**
+     * 연속 달성일 수. 오늘 아직 안 찍었으면 어제까지의 연속도 유지로 인정.
+     * 조회 기간은 1년으로 제한 (그 이상의 스트릭은 365+로 표기해도 충분)
+     */
+    public int currentStreak(Long memberId, LocalDate today) {
+        var dates = Set.copyOf(stampRepository.findStampDatesSince(memberId, today.minusDays(365)));
+        LocalDate cursor = dates.contains(today) ? today : today.minusDays(1);
+        int streak = 0;
+        while (dates.contains(cursor)) {
+            streak++;
+            cursor = cursor.minusDays(1);
+        }
+        return streak;
     }
 }

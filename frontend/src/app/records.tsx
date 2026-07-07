@@ -1,17 +1,156 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-// TODO: MVP 기록 — 캘린더 도장판 + 스트릭 (docs/06-화면설계.md #4), API: GET /api/stamps/calendar
+import { useCalendar, useStreak } from '@/api/routines';
+import { StampMark } from '@/components/seal-character';
+import {
+  SealoBorder,
+  SealoColors,
+  SealoRadius,
+  SealoSpacing,
+  SealoType,
+} from '@/constants/sealo-theme';
+
+const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+
+function toMonthKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/** 달력 그리드용: 앞쪽 빈 칸 + 날짜 배열 (일요일 시작) */
+function buildMonthCells(monthKey: string): (number | null)[] {
+  const [year, month] = monthKey.split('-').map(Number);
+  const first = new Date(year, month - 1, 1);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const cells: (number | null)[] = Array(first.getDay()).fill(null);
+  for (let day = 1; day <= daysInMonth; day++) cells.push(day);
+  return cells;
+}
+
+function shiftMonth(monthKey: string, diff: number): string {
+  const [year, month] = monthKey.split('-').map(Number);
+  return toMonthKey(new Date(year, month - 1 + diff, 1));
+}
+
 export default function RecordsScreen() {
+  const [monthKey, setMonthKey] = useState(() => toMonthKey(new Date()));
+  const { data: calendar, isLoading } = useCalendar(monthKey);
+  const { data: streak } = useStreak();
+
+  const stampedDays = useMemo(() => {
+    const map = new Map<number, number>();
+    calendar?.forEach((entry) => map.set(Number(entry.date.slice(8, 10)), entry.count));
+    return map;
+  }, [calendar]);
+
+  const cells = useMemo(() => buildMonthCells(monthKey), [monthKey]);
+  const todayKey = toMonthKey(new Date());
+  const todayDate = new Date().getDate();
+  const [year, month] = monthKey.split('-');
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.emoji}>📅</Text>
-      <Text style={styles.text}>기록 준비 중이에요</Text>
-    </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <Text style={styles.title}>기록</Text>
+
+      <View style={styles.streakCard}>
+        <Text style={styles.streakText}>🔥 연속 {streak?.current ?? 0}일</Text>
+      </View>
+
+      <View style={styles.monthNav}>
+        <Pressable onPress={() => setMonthKey(shiftMonth(monthKey, -1))} hitSlop={12}>
+          <Text style={styles.navArrow}>‹</Text>
+        </Pressable>
+        <Text style={styles.monthLabel}>
+          {year}년 {Number(month)}월
+        </Text>
+        <Pressable onPress={() => setMonthKey(shiftMonth(monthKey, 1))} hitSlop={12}>
+          <Text style={styles.navArrow}>›</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.weekdayRow}>
+        {WEEKDAY_LABELS.map((label) => (
+          <Text key={label} style={styles.weekdayLabel}>
+            {label}
+          </Text>
+        ))}
+      </View>
+
+      {isLoading ? (
+        <ActivityIndicator style={styles.loading} />
+      ) : (
+        <View style={styles.grid}>
+          {cells.map((day, index) => {
+            const isToday = monthKey === todayKey && day === todayDate;
+            const count = day != null ? (stampedDays.get(day) ?? 0) : 0;
+            return (
+              <View key={index} style={[styles.cell, isToday && styles.cellToday]}>
+                {day != null && (
+                  <>
+                    <Text style={styles.cellDay}>{day}</Text>
+                    {count > 0 && <StampMark />}
+                  </>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF' },
-  emoji: { fontSize: 48, marginBottom: 12 },
-  text: { fontSize: 16, color: '#666' },
+  container: { flex: 1, backgroundColor: SealoColors.background },
+  title: {
+    ...SealoType.title,
+    textAlign: 'center',
+    marginVertical: SealoSpacing.sm,
+  },
+  streakCard: {
+    alignSelf: 'center',
+    borderWidth: SealoBorder.width,
+    borderColor: SealoBorder.color,
+    borderRadius: SealoRadius.md,
+    paddingHorizontal: SealoSpacing.lg,
+    paddingVertical: SealoSpacing.sm,
+    marginBottom: SealoSpacing.md,
+  },
+  streakText: { ...SealoType.body },
+  monthNav: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: SealoSpacing.xl,
+    marginVertical: SealoSpacing.sm,
+  },
+  navArrow: { fontSize: 26, fontWeight: '700', color: SealoColors.textPrimary },
+  monthLabel: { ...SealoType.section },
+  weekdayRow: {
+    flexDirection: 'row',
+    paddingHorizontal: SealoSpacing.md,
+    marginTop: SealoSpacing.sm,
+  },
+  weekdayLabel: {
+    flex: 1,
+    textAlign: 'center',
+    ...SealoType.caption,
+    color: SealoColors.textSecondary,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: SealoSpacing.md,
+  },
+  cell: {
+    width: `${100 / 7}%`,
+    aspectRatio: 0.8,
+    alignItems: 'center',
+    paddingTop: SealoSpacing.xs,
+    borderRadius: SealoRadius.sm,
+  },
+  cellToday: { backgroundColor: SealoColors.todayHighlight },
+  cellDay: { ...SealoType.caption, color: SealoColors.textPrimary, marginBottom: 2 },
+  loading: { marginTop: SealoSpacing.xl },
 });

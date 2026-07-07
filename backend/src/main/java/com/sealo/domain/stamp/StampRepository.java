@@ -49,4 +49,11 @@ public interface StampRepository extends JpaRepository<Stamp, Long> {
             @Param("end") LocalDate end);
 
     void deleteAllByRoutineId(Long routineId);
+
+    /** 스트릭 계산용 — 도장 찍힌 날짜만 distinct 프로젝션 (docs/07) */
+    @Query("""
+            select distinct s.stampDate from Stamp s
+            where s.member.id = :memberId and s.stampDate >= :from
+            """)
+    List<LocalDate> findStampDatesSince(@Param("memberId") Long memberId, @Param("from") LocalDate from);
 }

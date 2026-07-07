@@ -10,6 +10,15 @@ export interface TodayRoutine {
   completed: boolean;
 }
 
+export interface Routine {
+  id: number;
+  name: string;
+  icon: string;
+  alarmTime: string; // "HH:mm:ss"
+  days: string[]; // "MONDAY" ...
+  alarmEnabled: boolean;
+}
+
 export interface StampResult {
   routineId: number;
   stampDate: string;
@@ -22,6 +31,13 @@ export interface RoutineForm {
   icon: string;
   alarmTime: string; // "HH:mm"
   days: string[]; // "MONDAY" ...
+}
+
+export function useRoutines() {
+  return useQuery({
+    queryKey: ["routines", "all"],
+    queryFn: async () => (await api.get<Routine[]>("/api/routines")).data,
+  });
 }
 
 export function useTodayRoutines() {
@@ -38,6 +54,7 @@ export function useStampRoutine() {
       (await api.post<StampResult>(`/api/routines/${routineId}/stamp`)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["routines", "today"] });
+      queryClient.invalidateQueries({ queryKey: ["stamps"] }); // 캘린더·스트릭 갱신
     },
   });
 }
@@ -49,5 +66,26 @@ export function useCreateRoutine() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["routines"] });
     },
+  });
+}
+
+export interface DailyStampCount {
+  date: string; // "2026-07-07"
+  count: number;
+}
+
+/** month: "2026-07" */
+export function useCalendar(month: string) {
+  return useQuery({
+    queryKey: ["stamps", "calendar", month],
+    queryFn: async () =>
+      (await api.get<DailyStampCount[]>("/api/stamps/calendar", { params: { month } })).data,
+  });
+}
+
+export function useStreak() {
+  return useQuery({
+    queryKey: ["stamps", "streak"],
+    queryFn: async () => (await api.get<{ current: number }>("/api/stamps/streak")).data,
   });
 }
