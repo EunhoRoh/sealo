@@ -21,6 +21,14 @@ export default function AppTabs() {
         />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="plans">
+        <NativeTabs.Trigger.Label>플랜</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          src={require('@/assets/images/tabIcons/explore.png')}
+          renderingMode="template"
+        />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="shop">
         <NativeTabs.Trigger.Label>상점</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
