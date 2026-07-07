@@ -1,0 +1,6 @@
+plugins {
+    // JDK 21이 로컬에 없으면 빌드 시 자동 다운로드 (Gradle 툴체인 프로비저닝)
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+rootProject.name = 'sealo-backend'

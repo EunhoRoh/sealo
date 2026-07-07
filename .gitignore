@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Backend (Gradle)
+backend/build/
+backend/.gradle/
+
+# Frontend (Expo)
+frontend/node_modules/
+frontend/.expo/
+frontend/dist/
+frontend/web-build/
+
+# env / secrets
+*.env
+.env.*

@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: sealo
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sealo
+    username: sealo
+    password: sealo-local
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    # OSIV 끄기 — 커넥션을 응답 직렬화까지 물고 있으면 트래픽 몰릴 때 풀 고갈 (docs/07-개발원칙.md)
+    open-in-view: false
+    hibernate:
+      ddl-auto: update # TODO: 운영 전환 시 validate + Flyway 마이그레이션으로 교체
+    properties:
+      hibernate:
+        # 컬렉션 지연 로딩 N+1을 in-쿼리 배치로 완화 (docs/07-개발원칙.md)
+        default_batch_fetch_size: 100
+
+logging:
+  level:
+    # 개발 중 쿼리 수 확인용 — 화면 하나에 쿼리 몇 개 나가는지 항상 본다
+    org.hibernate.SQL: debug
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
