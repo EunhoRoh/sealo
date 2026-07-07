@@ -1,0 +1,54 @@
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <!-- Sealo 도장 디자인 시안 3종 — 인주색 #C0392B, Lottie Creator 업로드용 -->
+  <style>
+    .red { stroke: #C0392B; fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+    .red-fill { fill: #C0392B; }
+    .label { font-size: 14px; fill: #444; }
+  </style>
+
+  <!-- ============ 시안 A: 물범 발바닥 (기본 도장) ============ -->
+  <g transform="translate(130,130)">
+    <circle class="red" r="85"/>
+    <circle class="red" r="75" stroke-width="2.5" stroke-dasharray="4 7"/>
+    <!-- 물범 앞지느러미 자국: 큰 패드 + 발톱 자국 3개 -->
+    <ellipse class="red-fill" cx="0" cy="18" rx="34" ry="26"/>
+    <ellipse class="red-fill" cx="-30" cy="-22" rx="11" ry="16" transform="rotate(-20 -30 -22)"/>
+    <ellipse class="red-fill" cx="0" cy="-30" rx="11" ry="16"/>
+    <ellipse class="red-fill" cx="30" cy="-22" rx="11" ry="16" transform="rotate(20 30 -22)"/>
+    <text class="label" x="0" y="125" text-anchor="middle">A. 물범 발바닥 — 기본 도장 (개별 루틴 완료)</text>
+  </g>
+
+  <!-- ============ 시안 B: SEAL OF APPROVAL (하루 전체 달성) ============ -->
+  <g transform="translate(390,130)">
+    <circle class="red" r="85"/>
+    <circle class="red" r="60" stroke-width="3"/>
+    <!-- 원형 텍스트 -->
+    <defs>
+      <path id="topArc" d="M -70 0 A 70 70 0 0 1 70 0" fill="none"/>
+      <path id="bottomArc" d="M -70 0 A 70 70 0 0 0 70 0" fill="none"/>
+    </defs>
+    <text class="red-fill" font-size="17" font-weight="bold" letter-spacing="3">
+      <textPath href="#topArc" startOffset="50%" text-anchor="middle">SEAL OF APPROVAL</textPath>
+    </text>
+    <text class="red-fill" font-size="14" font-weight="bold" letter-spacing="4">
+      <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">· SEALO ·</textPath>
+    </text>
+    <!-- 중앙: 물범 얼굴 미니멀 -->
+    <path class="red" stroke-width="4" d="M -28 8 Q -30 -18 0 -20 Q 30 -18 28 8 Q 26 26 0 28 Q -26 26 -28 8 Z"/>
+    <circle class="red-fill" cx="-11" cy="0" r="3.5"/>
+    <circle class="red-fill" cx="11" cy="0" r="3.5"/>
+    <path class="red" stroke-width="3" d="M -5 10 Q 0 14 5 10"/>
+    <path class="red" stroke-width="2" d="M -18 4 L -30 2 M 18 4 L 30 2"/>
+    <text class="label" x="0" y="125" text-anchor="middle">B. Seal of Approval — 하루 전체 달성 (캘린더 큰 도장)</text>
+  </g>
+
+  <!-- ============ 시안 C: 참 잘했어요 (한국 감성, v1.1 판매용) ============ -->
+  <g transform="translate(650,130)">
+    <circle class="red" r="85"/>
+    <text class="red-fill" x="0" y="-28" font-size="30" font-weight="900" text-anchor="middle">참</text>
+    <text class="red-fill" x="0" y="8" font-size="30" font-weight="900" text-anchor="middle">잘했어요</text>
+    <!-- 물범 꼬리 포인트 -->
+    <path class="red" stroke-width="4" d="M -22 32 Q 0 48 22 32 M -8 38 Q 0 46 8 38"/>
+    <text class="label" x="0" y="125" text-anchor="middle">C. 참 잘했어요 — 한국 감성 (상점 판매 아이템)</text>
+  </g>
+</svg>

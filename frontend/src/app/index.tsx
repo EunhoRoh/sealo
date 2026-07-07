@@ -19,6 +19,7 @@ import {
 } from '@/api/routines';
 import { useEquippedAccessory } from '@/api/shop';
 import { SealCharacter, StampMark } from '@/components/seal-character';
+import { StampSplash } from '@/components/stamp-splash';
 import { SealoColors } from '@/constants/sealo-theme';
 import { useRoutineAlarmSync } from '@/notifications/routine-alarms';
 
@@ -47,13 +48,17 @@ export default function HomeScreen() {
   const equippedAccessory = useEquippedAccessory();
   const [lastEarned, setLastEarned] = useState<number | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
 
   const bubbleMessage = useMemo(() => sealMessage(routines), [routines]);
 
   const onStamp = (routine: TodayRoutine) => {
     if (routine.completed || stamp.isPending) return;
     stamp.mutate(routine.id, {
-      onSuccess: (result) => setLastEarned(result.earnedShells),
+      onSuccess: (result) => {
+        setLastEarned(result.earnedShells);
+        setShowSplash(true); // 도장 쾅 연출
+      },
     });
   };
 
@@ -110,6 +115,7 @@ export default function HomeScreen() {
       />
 
       <AddRoutineModal visible={showAdd} onClose={() => setShowAdd(false)} />
+      <StampSplash visible={showSplash} onDone={() => setShowSplash(false)} />
     </SafeAreaView>
   );
 }
