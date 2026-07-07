@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -27,6 +25,7 @@ import {
   SealoSpacing,
   SealoType,
 } from '@/constants/sealo-theme';
+import { notify } from '@/utils/notify';
 
 const CATEGORY_LABELS: Record<'ALL' | ItemCategory, string> = {
   ALL: '전체',
@@ -35,15 +34,6 @@ const CATEGORY_LABELS: Record<'ALL' | ItemCategory, string> = {
   THEME: '보금자리',
   VOICE: '한마디',
 };
-
-function notify(message: string) {
-  if (Platform.OS === 'web') {
-    // RN Web은 Alert 미지원
-    window.alert(message);
-  } else {
-    Alert.alert('Sealo', message);
-  }
-}
 
 export default function ShopScreen() {
   const { data: items, isLoading } = useShopItems();
