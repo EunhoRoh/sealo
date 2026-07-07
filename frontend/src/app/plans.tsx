@@ -20,6 +20,7 @@ import {
   usePlans,
   useToggleItem,
 } from '@/api/plans';
+import { DateField } from '@/components/picker-fields';
 import { StampSplash } from '@/components/stamp-splash';
 import {
   SealoBorder,
@@ -265,13 +266,7 @@ function CreatePlanModal({ visible, onClose }: { visible: boolean; onClose: () =
             maxLength={30}
           />
           {template.usesTargetDate && (
-            <TextInput
-              style={styles.addInput}
-              placeholder="목표일 YYYY-MM-DD (선택)"
-              value={targetDate}
-              onChangeText={setTargetDate}
-              maxLength={10}
-            />
+            <DateField value={targetDate} onChange={setTargetDate} placeholder="목표일 (선택)" />
           )}
 
           <Text style={styles.templateHint}>

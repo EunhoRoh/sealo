@@ -73,6 +73,17 @@ export function useCreateRoutine() {
   });
 }
 
+export function useUpdateRoutine() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ routineId, form }: { routineId: number; form: RoutineForm }) =>
+      (await api.put<Routine>(`/api/routines/${routineId}`, form)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["routines"] });
+    },
+  });
+}
+
 export function useDeleteRoutine() {
   const queryClient = useQueryClient();
   return useMutation({

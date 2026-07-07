@@ -2,31 +2,30 @@ import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   AlarmType,
+  Routine,
   TodayRoutine,
   useCreateRoutine,
-  useDeleteRoutine,
+  useRoutines,
   useStampRoutine,
   useStreak,
   useTodayRoutines,
 } from '@/api/routines';
 import { useEquippedAccessory, useMe } from '@/api/shop';
+import { RoutineFormModal } from '@/components/routine-form-modal';
 import { SealCharacter, StampMark } from '@/components/seal-character';
 import { StampSplash } from '@/components/stamp-splash';
 import { sealLevel } from '@/constants/seal-growth';
 import { SealoColors, SealoShadow } from '@/constants/sealo-theme';
 import { silenceRoutineForToday, useRoutineAlarmSync } from '@/notifications/routine-alarms';
-import { confirmAction } from '@/utils/notify';
 
 const STAMP_RED = SealoColors.stampRed;
 const ALL_DAYS = [
@@ -56,14 +55,15 @@ function sealMessage(routines: TodayRoutine[] | undefined): string {
 export default function HomeScreen() {
   useRoutineAlarmSync(); // 루틴 변경 시 로컬 알림 재등록
   const { data: routines, isLoading, isError } = useTodayRoutines();
+  const { data: allRoutines } = useRoutines();
   const { data: streak } = useStreak();
   const { data: me } = useMe();
   const stamp = useStampRoutine();
-  const removeRoutine = useDeleteRoutine();
   const create = useCreateRoutine();
   const equippedAccessory = useEquippedAccessory();
   const [lastEarned, setLastEarned] = useState<number | null>(null);
-  const [showAdd, setShowAdd] = useState(false);
+  const [formVisible, setFormVisible] = useState(false);
+  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   const [showSplash, setShowSplash] = useState(false);
 
   const bubbleMessage = useMemo(() => sealMessage(routines), [routines]);
@@ -79,8 +79,13 @@ export default function HomeScreen() {
     });
   };
 
-  const onDeleteRoutine = (routine: TodayRoutine) => {
-    confirmAction(`"${routine.name}" 루틴을 삭제할까요?`, () => removeRoutine.mutate(routine.id));
+  /** 길게 누르면 수정/삭제 (전체 루틴 데이터에서 요일·알람 설정까지 로드) */
+  const onEditRoutine = (routine: TodayRoutine) => {
+    const full = allRoutines?.find((r) => r.id === routine.id);
+    if (full) {
+      setEditingRoutine(full);
+      setFormVisible(true);
+    }
   };
 
   /** 첫 사용자용 — 물범 추천 루틴 3개 원탭 생성 (docs/13 P0) */
@@ -123,7 +128,12 @@ export default function HomeScreen() {
 
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>오늘의 루틴</Text>
-        <Pressable onPress={() => setShowAdd(true)} hitSlop={8}>
+        <Pressable
+          onPress={() => {
+            setEditingRoutine(null);
+            setFormVisible(true);
+          }}
+          hitSlop={8}>
           <Text style={styles.addButton}>+ 추가</Text>
         </Pressable>
       </View>
@@ -153,7 +163,7 @@ export default function HomeScreen() {
         renderItem={({ item }) => (
           <Pressable
             onPress={() => onStamp(item)}
-            onLongPress={() => onDeleteRoutine(item)}
+            onLongPress={() => onEditRoutine(item)}
             delayLongPress={500}
             style={[styles.routineRow, item.completed && styles.routineRowDone]}>
             <Text style={styles.routineIcon}>{item.icon}</Text>
@@ -168,92 +178,13 @@ export default function HomeScreen() {
         )}
       />
 
-      <AddRoutineModal visible={showAdd} onClose={() => setShowAdd(false)} />
+      <RoutineFormModal
+        visible={formVisible}
+        editing={editingRoutine}
+        onClose={() => setFormVisible(false)}
+      />
       <StampSplash visible={showSplash} onDone={() => setShowSplash(false)} />
     </SafeAreaView>
-  );
-}
-
-function AddRoutineModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const create = useCreateRoutine();
-  const [name, setName] = useState('');
-  const [icon, setIcon] = useState('⭐');
-  const [time, setTime] = useState('08:00');
-  const [alarmType, setAlarmType] = useState<AlarmType>('GENTLE');
-
-  const valid = name.trim().length > 0 && /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
-
-  const onSave = () => {
-    if (!valid || create.isPending) return;
-    create.mutate(
-      { name: name.trim(), icon, alarmTime: time, days: ALL_DAYS, alarmType },
-      {
-        onSuccess: () => {
-          setName('');
-          setTime('08:00');
-          onClose();
-        },
-      },
-    );
-  };
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalBackdrop}>
-        <View style={styles.modalSheet}>
-          <Text style={styles.modalTitle}>루틴 만들기</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="이름 (예: 점심 산책)"
-            value={name}
-            onChangeText={setName}
-            maxLength={30}
-          />
-          <View style={styles.inputRow}>
-            <TextInput
-              style={[styles.input, styles.inputSmall]}
-              placeholder="아이콘"
-              value={icon}
-              onChangeText={setIcon}
-              maxLength={2}
-            />
-            <TextInput
-              style={[styles.input, styles.inputSmall]}
-              placeholder="HH:MM"
-              value={time}
-              onChangeText={setTime}
-              maxLength={5}
-            />
-          </View>
-          <Pressable
-            style={[styles.tarrungToggle, alarmType === 'LOUD' && styles.tarrungToggleOn]}
-            onPress={() => setAlarmType(alarmType === 'LOUD' ? 'GENTLE' : 'LOUD')}>
-            <Text style={styles.tarrungIcon}>{alarmType === 'LOUD' ? '🔔' : '🔕'}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.tarrungTitle}>
-                따르릉 모드 {alarmType === 'LOUD' ? 'ON' : 'OFF'}
-              </Text>
-              <Text style={styles.tarrungDesc}>
-                {alarmType === 'LOUD'
-                  ? '도장 찍을 때까지 물범이 3번 깨워요 (0·3·7분)'
-                  : '한 번만 조용히 알려줘요'}
-              </Text>
-            </View>
-          </Pressable>
-          <Text style={styles.modalHint}>반복: 매일 (요일 선택은 곧 추가돼요)</Text>
-          <View style={styles.modalButtons}>
-            <Pressable onPress={onClose} style={styles.cancelButton}>
-              <Text>취소</Text>
-            </Pressable>
-            <Pressable
-              onPress={onSave}
-              style={[styles.saveButton, !valid && styles.saveButtonDisabled]}>
-              <Text style={styles.saveButtonText}>저장</Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
-    </Modal>
   );
 }
 
@@ -292,19 +223,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   streakText: { fontWeight: '700', color: SealoColors.ink },
-  tarrungToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1.5,
-    borderColor: SealoColors.ink,
-    borderRadius: 10,
-    padding: 12,
-  },
-  tarrungToggleOn: { backgroundColor: SealoColors.todayHighlight, borderColor: SealoColors.stampRed },
-  tarrungIcon: { fontSize: 22 },
-  tarrungTitle: { fontWeight: '700', color: SealoColors.ink },
-  tarrungDesc: { fontSize: 12, color: SealoColors.textSecondary, marginTop: 2 },
   title: {
     fontSize: 22,
     fontWeight: '800',
@@ -345,38 +263,4 @@ const styles = StyleSheet.create({
   center: { marginTop: 24 },
   errorText: { textAlign: 'center', color: STAMP_RED, marginTop: 16, paddingHorizontal: 24 },
   emptyText: { textAlign: 'center', color: SealoColors.textSecondary, marginTop: 24 },
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: SealoColors.backdrop,
-  },
-  modalSheet: {
-    backgroundColor: SealoColors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    gap: 12,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '700' },
-  input: {
-    borderWidth: 1.5,
-    borderColor: SealoColors.ink,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-  },
-  inputRow: { flexDirection: 'row', gap: 12 },
-  inputSmall: { flex: 1 },
-  modalHint: { fontSize: 12, color: SealoColors.textSecondary },
-  modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, marginTop: 4 },
-  cancelButton: { paddingVertical: 10, paddingHorizontal: 16 },
-  saveButton: {
-    backgroundColor: SealoColors.ink,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-  },
-  saveButtonDisabled: { opacity: 0.3 },
-  saveButtonText: { color: SealoColors.surface, fontWeight: '700' },
 });
