@@ -20,6 +20,7 @@ import {
   usePlans,
   useToggleItem,
 } from '@/api/plans';
+import { AiPlanModal } from '@/components/ai-plan-modal';
 import { DateField } from '@/components/picker-fields';
 import { StampSplash } from '@/components/stamp-splash';
 import {
@@ -47,6 +48,7 @@ export default function PlansScreen() {
   const { data: plans, isLoading } = usePlans();
   const [detailId, setDetailId] = useState<number | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showAi, setShowAi] = useState(false);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -56,6 +58,14 @@ export default function PlansScreen() {
           <Text style={styles.addButtonText}>+ 새 플랜</Text>
         </Pressable>
       </View>
+
+      <Pressable style={styles.aiHero} onPress={() => setShowAi(true)}>
+        <Text style={styles.aiHeroIcon}>🦭</Text>
+        <View style={styles.aiHeroBody}>
+          <Text style={styles.aiHeroTitle}>물범에게 부탁하기 ✨</Text>
+          <Text style={styles.aiHeroDesc}>여행·운동·식단·독서… 몇 번만 고르면 계획을 짜줘요</Text>
+        </View>
+      </Pressable>
 
       <FlatList
         data={plans}
@@ -76,6 +86,11 @@ export default function PlansScreen() {
 
       <PlanDetailModal planId={detailId} onClose={() => setDetailId(null)} />
       <CreatePlanModal visible={showCreate} onClose={() => setShowCreate(false)} />
+      <AiPlanModal
+        visible={showAi}
+        onClose={() => setShowAi(false)}
+        onCreated={(planId) => setDetailId(planId)}
+      />
     </SafeAreaView>
   );
 }
@@ -302,6 +317,22 @@ const styles = StyleSheet.create({
   title: { ...SealoType.title },
   addButton: { position: 'absolute', right: SealoSpacing.lg },
   addButtonText: { fontWeight: '700', color: SealoColors.stampRed, fontSize: 15 },
+  aiHero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SealoSpacing.md,
+    marginHorizontal: SealoSpacing.lg,
+    borderWidth: 2,
+    borderColor: SealoColors.stampRed,
+    borderRadius: SealoRadius.md,
+    backgroundColor: SealoColors.todayHighlight,
+    padding: SealoSpacing.md,
+    ...SealoShadow,
+  },
+  aiHeroIcon: { fontSize: 30 },
+  aiHeroBody: { flex: 1 },
+  aiHeroTitle: { ...SealoType.body, color: SealoColors.ink },
+  aiHeroDesc: { fontSize: 12, color: SealoColors.textSecondary, marginTop: 2 },
   listContent: { padding: SealoSpacing.lg, gap: SealoSpacing.sm },
   empty: { alignItems: 'center', marginTop: SealoSpacing.xl, gap: SealoSpacing.md },
   emptyEmoji: { fontSize: 44 },

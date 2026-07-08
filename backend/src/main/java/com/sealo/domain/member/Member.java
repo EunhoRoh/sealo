@@ -41,6 +41,10 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false)
     private int shellBalance;
 
+    /** AI 플랜 사용 횟수 — 0이면 첫 1회 무료 (docs/14) */
+    @Column(nullable = false, columnDefinition = "integer not null default 0")
+    private int aiPlanUses;
+
     @Builder
     private Member(String nickname, AuthProvider provider, String providerId) {
         this.nickname = nickname;
@@ -58,5 +62,9 @@ public class Member extends BaseTimeEntity {
             throw new IllegalStateException("조개가 부족합니다.");
         }
         this.shellBalance -= amount;
+    }
+
+    public void increaseAiPlanUses() {
+        this.aiPlanUses++;
     }
 }

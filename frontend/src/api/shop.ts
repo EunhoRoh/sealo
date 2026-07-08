@@ -17,6 +17,7 @@ export interface ShopItem {
 export interface Me {
   nickname: string;
   shellBalance: number;
+  aiPlanUses: number; // 0이면 물범에게 부탁하기 첫 1회 무료
 }
 
 export function useMe() {
