@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "./client";
 
-export type PlanTheme = "SKINCARE" | "WORKOUT" | "STUDY" | "TRAVEL" | "CUSTOM";
+export type PlanTheme = "SKINCARE" | "WORKOUT" | "STUDY" | "TRAVEL" | "READING" | "CUSTOM";
 
 export interface PlanSummary {
   id: number;

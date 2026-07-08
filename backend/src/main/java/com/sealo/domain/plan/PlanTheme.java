@@ -9,5 +9,6 @@ public enum PlanTheme {
     WORKOUT,  // 💪 운동 — 운동 구성
     STUDY,    // 📚 공부 — 계획 체크리스트
     TRAVEL,   // ✈️ 여행 — 준비물/방문지, targetDate = 출발일(D-day)
+    READING,  // 📖 독서 — 완독 계획, targetDate = 완독 목표일
     CUSTOM    // ➕ 커스텀
 }

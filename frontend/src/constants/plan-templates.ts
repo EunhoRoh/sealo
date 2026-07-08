@@ -70,6 +70,22 @@ export const PLAN_TEMPLATES: PlanTemplate[] = [
     ],
   },
   {
+    theme: "READING",
+    label: "독서",
+    icon: "📖",
+    defaultTitle: "완독 챌린지",
+    usesTargetDate: true,
+    sealComment: "물범도 책 읽는 거 좋아해 (그림책)",
+    items: [
+      "읽을 책 정하기",
+      "1주차: 1~4장",
+      "2주차: 5~8장",
+      "3주차: 9~12장",
+      "4주차: 끝까지 + 완독!",
+      "인상 깊은 문장 3개 기록",
+    ],
+  },
+  {
     theme: "CUSTOM",
     label: "커스텀",
     icon: "📝",
