@@ -111,6 +111,33 @@ export function useAddItem() {
   });
 }
 
+/** 계획 재조정 — 하루 밀렸어(+1)/당겨졌어(-1), 목표일+모든 일정 이동 → 알람 재동기화 */
+export function useShiftPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ planId, days }: { planId: number; days: number }) =>
+      (await api.post<PlanDetail>(`/api/plans/${planId}/shift`, { days })).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plans"] }),
+  });
+}
+
+/** 항목 일정 변경/해제 (date=null이면 알람 해제) */
+export function useRescheduleItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      itemId,
+      date,
+      time,
+    }: {
+      itemId: number;
+      date: string | null;
+      time: string | null;
+    }) => (await api.patch(`/api/plans/items/${itemId}/schedule`, { date, time })).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plans"] }),
+  });
+}
+
 export function useDeletePlan() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -98,6 +98,54 @@ class PlanApiTest {
     }
 
     @Test
+    void 계획을_하루_미루면_목표일과_항목_일정이_함께_이동한다() throws Exception {
+        JsonNode plan = createPlan("제주 여행", List.of("여권"));
+        long planId = plan.get("id").asLong();
+        long itemId = plan.get("items").get(0).get("id").asLong();
+
+        // 항목에 일정 부여
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .patch("/api/plans/items/" + itemId + "/schedule")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("date", "2026-08-14", "time", "21:00"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.scheduledDate").value("2026-08-14"));
+
+        // 하루 미루기
+        mockMvc.perform(post("/api/plans/" + planId + "/shift")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("days", 1))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.targetDate").value("2026-08-16"))
+                .andExpect(jsonPath("$.items[0].scheduledDate").value("2026-08-15"));
+    }
+
+    @Test
+    void 일정을_해제하면_알람_대상에서_빠진다() throws Exception {
+        JsonNode plan = createPlan("제주 여행", List.of("여권"));
+        long itemId = plan.get("items").get(0).get("id").asLong();
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .patch("/api/plans/items/" + itemId + "/schedule")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("date", "2099-01-01", "time", "09:00"))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/plans/upcoming"))
+                .andExpect(jsonPath("$.length()").value(1));
+
+        String clear = "{\"date\":null,\"time\":null}";
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .patch("/api/plans/items/" + itemId + "/schedule")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(clear))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/plans/upcoming"))
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void 다른_회원의_플랜은_조회할_수_없다() throws Exception {
         JsonNode plan = createPlan("제주 여행", List.of("여권"));
         long planId = plan.get("id").asLong();

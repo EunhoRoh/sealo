@@ -62,4 +62,17 @@ public class PlanItem extends BaseTimeEntity {
     public void toggle() {
         this.done = !this.done;
     }
+
+    /** 일정 변경/해제 — 알람은 프론트가 upcoming 재조회로 동기화 */
+    public void reschedule(java.time.LocalDate date, java.time.LocalTime time) {
+        this.scheduledDate = date;
+        this.scheduledTime = time;
+    }
+
+    /** 계획 재조정 — 일정을 days만큼 이동 */
+    public void shiftSchedule(int days) {
+        if (scheduledDate != null) {
+            this.scheduledDate = scheduledDate.plusDays(days);
+        }
+    }
 }

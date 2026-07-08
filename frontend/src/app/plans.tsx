@@ -12,16 +12,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
+  PlanItem,
   PlanSummary,
   useAddItem,
   useCreatePlan,
   useDeletePlan,
   usePlanDetail,
   usePlans,
+  useRescheduleItem,
+  useShiftPlan,
   useToggleItem,
 } from '@/api/plans';
 import { AiPlanModal } from '@/components/ai-plan-modal';
-import { DateField } from '@/components/picker-fields';
+import { DateField, TimeField } from '@/components/picker-fields';
 import { StampSplash } from '@/components/stamp-splash';
 import {
   SealoBorder,
@@ -132,8 +135,44 @@ function PlanDetailModal({ planId, onClose }: { planId: number | null; onClose: 
   const toggle = useToggleItem();
   const addItem = useAddItem();
   const deletePlan = useDeletePlan();
+  const shift = useShiftPlan();
+  const reschedule = useRescheduleItem();
   const [newItem, setNewItem] = useState('');
   const [celebrate, setCelebrate] = useState(false);
+  // 일정 편집 중인 항목 (길게 누르거나 날짜 뱃지 탭)
+  const [editItem, setEditItem] = useState<PlanItem | null>(null);
+  const [editDate, setEditDate] = useState('');
+  const [editTime, setEditTime] = useState('09:00');
+
+  const hasSchedule =
+    plan != null && (plan.targetDate != null || plan.items.some((i) => i.scheduledDate != null));
+
+  const openScheduleEditor = (item: PlanItem) => {
+    setEditItem(item);
+    setEditDate(item.scheduledDate ?? '');
+    setEditTime(item.scheduledTime?.slice(0, 5) ?? '09:00');
+  };
+
+  const saveSchedule = () => {
+    if (!editItem || reschedule.isPending) return;
+    reschedule.mutate(
+      { itemId: editItem.id, date: editDate !== '' ? editDate : null, time: editDate !== '' ? editTime : null },
+      { onSuccess: () => setEditItem(null) },
+    );
+  };
+
+  const clearSchedule = () => {
+    if (!editItem || reschedule.isPending) return;
+    reschedule.mutate(
+      { itemId: editItem.id, date: null, time: null },
+      { onSuccess: () => setEditItem(null) },
+    );
+  };
+
+  const onShift = (days: number) => {
+    if (planId == null || shift.isPending) return;
+    shift.mutate({ planId, days });
+  };
 
   const onToggle = (itemId: number) => {
     if (toggle.isPending) return;
@@ -165,7 +204,7 @@ function PlanDetailModal({ planId, onClose }: { planId: number | null; onClose: 
           {plan && (
             <>
               <View style={styles.detailHeader}>
-                <Text style={styles.detailTitle}>
+                <Text style={styles.detailTitle} numberOfLines={1}>
                   {plan.icon} {plan.title}
                 </Text>
                 {dday(plan.targetDate) != null && (
@@ -174,25 +213,62 @@ function PlanDetailModal({ planId, onClose }: { planId: number | null; onClose: 
               </View>
               <Text style={styles.sealComment}>{templateFor(plan.theme).sealComment}</Text>
 
+              {hasSchedule && (
+                <View style={styles.shiftRow}>
+                  <Pressable style={styles.shiftButton} onPress={() => onShift(1)}>
+                    <Text style={styles.shiftText}>😅 하루 밀렸어 (+1일)</Text>
+                  </Pressable>
+                  <Pressable style={styles.shiftButton} onPress={() => onShift(-1)}>
+                    <Text style={styles.shiftText}>⚡ 하루 당기기 (-1일)</Text>
+                  </Pressable>
+                </View>
+              )}
+
               <ScrollView style={styles.itemList}>
                 {plan.items.map((item) => (
-                  <Pressable
-                    key={item.id}
-                    onPress={() => onToggle(item.id)}
-                    style={styles.itemRow}>
-                    <Text style={styles.itemCheck}>{item.done ? '🦭' : '⬜'}</Text>
-                    <Text style={[styles.itemName, item.done && styles.itemNameDone]}>
-                      {item.name}
-                    </Text>
-                    {item.scheduledDate != null && (
-                      <View style={styles.itemDateBadge}>
-                        <Text style={styles.itemDateText}>
-                          {item.scheduledDate.slice(5).replace('-', '/')}
-                          {item.scheduledTime != null ? ` ${item.scheduledTime.slice(0, 5)} 🔔` : ''}
-                        </Text>
+                  <View key={item.id}>
+                    <Pressable
+                      onPress={() => onToggle(item.id)}
+                      onLongPress={() => openScheduleEditor(item)}
+                      delayLongPress={400}
+                      style={styles.itemRow}>
+                      <Text style={styles.itemCheck}>{item.done ? '🦭' : '⬜'}</Text>
+                      <Text style={[styles.itemName, item.done && styles.itemNameDone]}>
+                        {item.name}
+                      </Text>
+                      <Pressable onPress={() => openScheduleEditor(item)} hitSlop={6}>
+                        <View style={[styles.itemDateBadge, item.scheduledDate == null && styles.itemDateEmpty]}>
+                          <Text style={styles.itemDateText}>
+                            {item.scheduledDate != null
+                              ? `${item.scheduledDate.slice(5).replace('-', '/')}${
+                                  item.scheduledTime != null ? ` ${item.scheduledTime.slice(0, 5)} 🔔` : ''
+                                }`
+                              : '🕐'}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    </Pressable>
+
+                    {editItem?.id === item.id && (
+                      <View style={styles.scheduleEditor}>
+                        <DateField value={editDate} onChange={setEditDate} placeholder="날짜 선택" />
+                        {editDate !== '' && <TimeField value={editTime} onChange={setEditTime} />}
+                        <View style={styles.scheduleEditorButtons}>
+                          {item.scheduledDate != null && (
+                            <Pressable onPress={clearSchedule} hitSlop={8}>
+                              <Text style={styles.deleteText}>알람 해제</Text>
+                            </Pressable>
+                          )}
+                          <Pressable onPress={() => setEditItem(null)} hitSlop={8}>
+                            <Text style={styles.closeText}>취소</Text>
+                          </Pressable>
+                          <Pressable style={styles.scheduleSave} onPress={saveSchedule}>
+                            <Text style={styles.scheduleSaveText}>저장</Text>
+                          </Pressable>
+                        </View>
                       </View>
                     )}
-                  </Pressable>
+                  </View>
                 ))}
               </ScrollView>
 
@@ -407,6 +483,37 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   itemDateText: { fontSize: 11, fontWeight: '700', color: SealoColors.ink },
+  itemDateEmpty: { backgroundColor: 'transparent' },
+  shiftRow: { flexDirection: 'row', gap: SealoSpacing.sm },
+  shiftButton: {
+    flex: 1,
+    borderWidth: SealoBorder.width,
+    borderColor: SealoBorder.color,
+    borderRadius: SealoRadius.sm,
+    paddingVertical: SealoSpacing.sm,
+    alignItems: 'center',
+  },
+  shiftText: { fontSize: 13, fontWeight: '700', color: SealoColors.ink },
+  scheduleEditor: {
+    backgroundColor: SealoColors.ice,
+    borderRadius: SealoRadius.sm,
+    padding: SealoSpacing.md,
+    gap: SealoSpacing.sm,
+    marginBottom: SealoSpacing.sm,
+  },
+  scheduleEditorButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: SealoSpacing.lg,
+  },
+  scheduleSave: {
+    backgroundColor: SealoColors.ink,
+    borderRadius: SealoRadius.sm,
+    paddingVertical: 8,
+    paddingHorizontal: SealoSpacing.lg,
+  },
+  scheduleSaveText: { color: SealoColors.surface, fontWeight: '700' },
   itemNameDone: { textDecorationLine: 'line-through', color: SealoColors.disabled },
   addRow: { flexDirection: 'row', gap: SealoSpacing.sm },
   addInput: {

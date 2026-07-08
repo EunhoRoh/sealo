@@ -66,6 +66,30 @@ public class PlanController {
     public record AddItemRequest(@NotBlank @Size(max = 50) String name) {
     }
 
+    public record ShiftRequest(int days) {
+    }
+
+    /** 계획 재조정 — 하루 밀렸어(+1) / 당겨졌어(-1), 목표일+모든 일정 이동 */
+    @PostMapping("/{planId}/shift")
+    public PlanDetailResponse shift(
+            @RequestHeader(value = "X-Member-Id", defaultValue = "1") Long memberId,
+            @PathVariable Long planId,
+            @RequestBody ShiftRequest request) {
+        return planService.shift(memberId, planId, request.days());
+    }
+
+    public record RescheduleRequest(java.time.LocalDate date, java.time.LocalTime time) {
+    }
+
+    /** 항목 일정 변경/해제 (date=null이면 알람 해제) */
+    @org.springframework.web.bind.annotation.PatchMapping("/items/{itemId}/schedule")
+    public PlanDetailResponse.Item reschedule(
+            @RequestHeader(value = "X-Member-Id", defaultValue = "1") Long memberId,
+            @PathVariable Long itemId,
+            @RequestBody RescheduleRequest request) {
+        return planService.rescheduleItem(memberId, itemId, request.date(), request.time());
+    }
+
     @PostMapping("/{planId}/items")
     @ResponseStatus(HttpStatus.CREATED)
     public PlanDetailResponse.Item addItem(

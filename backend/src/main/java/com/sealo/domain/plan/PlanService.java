@@ -110,6 +110,33 @@ public class PlanService {
         return planItemRepository.findUpcoming(memberId, from);
     }
 
+    /**
+     * 계획 재조정 (docs/14) — "하루 밀렸어" 하면 목표일과 모든 일정 항목을 함께 이동.
+     * 항목 수가 적어(≤50) 엔티티 로드 + dirty checking으로 처리 (벌크 날짜 연산보다 단순·안전)
+     */
+    @Transactional
+    public PlanDetailResponse shift(Long memberId, Long planId, int days) {
+        if (days == 0 || Math.abs(days) > 365) {
+            throw new IllegalArgumentException("이동 일수는 ±365일 이내여야 합니다.");
+        }
+        Plan plan = getOwned(memberId, planId);
+        plan.shiftTargetDate(days);
+        List<PlanItem> items = planItemRepository.findAllByPlanIdOrderBySortOrder(planId);
+        items.forEach(item -> item.shiftSchedule(days));
+        return PlanDetailResponse.of(plan, items);
+    }
+
+    /** 항목 일정 변경/해제 — date가 null이면 알람 해제 */
+    @Transactional
+    public PlanDetailResponse.Item rescheduleItem(Long memberId, Long itemId,
+                                                  java.time.LocalDate date, java.time.LocalTime time) {
+        PlanItem item = planItemRepository.findOwnedWithPlan(itemId, memberId)
+                .orElseThrow(() -> new EntityNotFoundException("항목을 찾을 수 없습니다."));
+        item.reschedule(date, date != null ? time : null);
+        return new PlanDetailResponse.Item(item.getId(), item.getName(), item.isDone(),
+                item.getScheduledDate(), item.getScheduledTime());
+    }
+
     @Transactional
     public PlanDetailResponse.Item addItem(Long memberId, Long planId, String name) {
         Plan plan = getOwned(memberId, planId);

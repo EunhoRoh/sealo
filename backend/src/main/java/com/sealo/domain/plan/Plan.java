@@ -67,4 +67,11 @@ public class Plan extends BaseTimeEntity {
     public void markRewarded() {
         this.rewarded = true;
     }
+
+    /** 계획 재조정 — 목표일을 days만큼 이동 (docs/14 킬러 유스케이스) */
+    public void shiftTargetDate(int days) {
+        if (targetDate != null) {
+            this.targetDate = targetDate.plusDays(days);
+        }
+    }
 }

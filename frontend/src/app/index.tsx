@@ -190,7 +190,9 @@ export default function HomeScreen() {
             style={[styles.routineRow, item.completed && styles.routineRowDone]}>
             <Text style={styles.routineIcon}>{item.icon}</Text>
             <View style={styles.routineInfo}>
-              <Text style={[styles.routineName, item.completed && styles.routineNameDone]}>
+              <Text
+                style={[styles.routineName, item.completed && styles.routineNameDone]}
+                numberOfLines={1}>
                 {item.name}
               </Text>
               <Text style={styles.routineTime}>{item.alarmTime.slice(0, 5)}</Text>
