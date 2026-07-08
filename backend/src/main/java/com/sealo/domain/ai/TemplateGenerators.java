@@ -64,15 +64,35 @@ public final class TemplateGenerators {
                 case "친구" -> items.addAll(List.of("회비/정산 방법 정하기", "밤에 할 보드게임·이야깃거리"));
                 default -> items.add("혼자만의 플레이리스트 만들기");
             }
-            items.add("1일차: " + city + " 도착 · 숙소 체크인");
-            items.add("1일차 저녁: " + city + " 맛집 탐방");
-            for (int d = 2; d < days; d++) {
-                items.add(d + "일차: " + city + " 주요 명소 둘러보기");
+            LocalDate start = getDate(a, "startDate");
+            List<PlanDraft.ScheduledItem> schedule = new ArrayList<>();
+            if (start != null) {
+                // 출발일이 있으면 일자별 코스에 실제 날짜/시간 부여 → 캘린더 + 알람 (Plan v2)
+                schedule.add(new PlanDraft.ScheduledItem("🧳 짐 다 쌌어? 최종 점검!",
+                        start.minusDays(1), java.time.LocalTime.of(21, 0)));
+                schedule.add(new PlanDraft.ScheduledItem("1일차: " + city + " 도착 · 숙소 체크인",
+                        start, java.time.LocalTime.of(11, 0)));
+                schedule.add(new PlanDraft.ScheduledItem("1일차 저녁: " + city + " 맛집 탐방",
+                        start, java.time.LocalTime.of(18, 0)));
+                for (int d = 2; d < days; d++) {
+                    schedule.add(new PlanDraft.ScheduledItem(d + "일차: " + city + " 주요 명소 둘러보기",
+                            start.plusDays(d - 1), java.time.LocalTime.of(10, 0)));
+                }
+                if (days >= 2) {
+                    schedule.add(new PlanDraft.ScheduledItem(days + "일차: 기념품 사기 · 여유있게 귀가",
+                            start.plusDays(days - 1), java.time.LocalTime.of(10, 0)));
+                }
+            } else {
+                items.add("1일차: " + city + " 도착 · 숙소 체크인");
+                items.add("1일차 저녁: " + city + " 맛집 탐방");
+                for (int d = 2; d < days; d++) {
+                    items.add(d + "일차: " + city + " 주요 명소 둘러보기");
+                }
+                if (days >= 2) {
+                    items.add(days + "일차: 기념품 사기 · 여유있게 귀가");
+                }
             }
-            if (days >= 2) {
-                items.add(days + "일차: 기념품 사기 · 여유있게 귀가");
-            }
-            return new PlanDraft(city + " 여행", "✈️", getDate(a, "startDate"), items);
+            return new PlanDraft(city + " 여행", "✈️", start, items, schedule);
         }
     }
 
@@ -118,7 +138,7 @@ public final class TemplateGenerators {
             items.add("세트 간 휴식 " + rest + "분 지키기");
             items.add("마무리 쿨다운 스트레칭 5분");
             items.add("물 500ml 이상 마시기");
-            return new PlanDraft("오늘의 " + get(a, "parts", "전신") + " 운동", "💪", null, items);
+            return new PlanDraft("오늘의 " + get(a, "parts", "전신") + " 운동", "💪", null, items, List.of());
         }
     }
 
@@ -152,7 +172,7 @@ public final class TemplateGenerators {
             if ("벌크업".equals(goal)) items.add("운동 직후 단백질 보충 잊지 않기");
             items.add("장보기: 계란·닭가슴살·오트밀·채소·그릭요거트");
             items.add("⚠️ 참고용 계획 — 건강 상태에 따라 전문가와 상의하세요");
-            return new PlanDraft(goal + " 식단 (" + kcal + "kcal)", "🍚", null, items);
+            return new PlanDraft(goal + " 식단 (" + kcal + "kcal)", "🍚", null, items, List.of());
         }
     }
 
@@ -190,7 +210,7 @@ public final class TemplateGenerators {
             }
             items.add("인상 깊은 문장 3개 기록하기");
             items.add("완독하면 물범에게 한 줄 감상 들려주기 🦭");
-            return new PlanDraft("『" + book + "』 완독", "📖", target, items);
+            return new PlanDraft("『" + book + "』 완독", "📖", target, items, List.of());
         }
     }
 
@@ -224,7 +244,7 @@ public final class TemplateGenerators {
             items.add((concept + 1) + "~" + (concept + practice) + "주차: 문제 풀이 + 오답노트");
             items.add("마지막 주: 모의시험 + 오답 최종 복습");
             items.add("주말마다: 한 주 배운 것 물범에게 설명해보기 (설명 못 하면 모르는 것!)");
-            return new PlanDraft(subject + " 정복", "📚", exam, items);
+            return new PlanDraft(subject + " 정복", "📚", exam, items, List.of());
         }
     }
 
@@ -266,7 +286,7 @@ public final class TemplateGenerators {
                 items.add("⚠️ 레티놀과 AHA/BHA를 같은 날 쓰면 자극이 커요 — 요일을 나눴어요");
             }
             items.add("주 1회: 피부 상태 사진으로 기록");
-            return new PlanDraft("나만의 스킨케어 루틴", "🧴", null, items);
+            return new PlanDraft("나만의 스킨케어 루틴", "🧴", null, items, List.of());
         }
     }
 }

@@ -41,6 +41,13 @@ public class PlanController {
         return planService.create(memberId, request);
     }
 
+    /** 다가오는 일정 항목 — 프론트 플랜 알람 동기화 + 캘린더 표시용 */
+    @GetMapping("/upcoming")
+    public List<PlanItemRepository.UpcomingItem> upcoming(
+            @RequestHeader(value = "X-Member-Id", defaultValue = "1") Long memberId) {
+        return planService.getUpcoming(memberId, java.time.LocalDate.now());
+    }
+
     @GetMapping("/{planId}")
     public PlanDetailResponse detail(
             @RequestHeader(value = "X-Member-Id", defaultValue = "1") Long memberId,

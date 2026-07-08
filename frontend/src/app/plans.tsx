@@ -184,6 +184,14 @@ function PlanDetailModal({ planId, onClose }: { planId: number | null; onClose: 
                     <Text style={[styles.itemName, item.done && styles.itemNameDone]}>
                       {item.name}
                     </Text>
+                    {item.scheduledDate != null && (
+                      <View style={styles.itemDateBadge}>
+                        <Text style={styles.itemDateText}>
+                          {item.scheduledDate.slice(5).replace('-', '/')}
+                          {item.scheduledTime != null ? ` ${item.scheduledTime.slice(0, 5)} 🔔` : ''}
+                        </Text>
+                      </View>
+                    )}
                   </Pressable>
                 ))}
               </ScrollView>
@@ -392,6 +400,13 @@ const styles = StyleSheet.create({
   },
   itemCheck: { fontSize: 18 },
   itemName: { fontSize: 15, color: SealoColors.textPrimary, flex: 1 },
+  itemDateBadge: {
+    backgroundColor: SealoColors.ice,
+    borderRadius: SealoRadius.lg,
+    paddingHorizontal: SealoSpacing.sm,
+    paddingVertical: 2,
+  },
+  itemDateText: { fontSize: 11, fontWeight: '700', color: SealoColors.ink },
   itemNameDone: { textDecorationLine: 'line-through', color: SealoColors.disabled },
   addRow: { flexDirection: 'row', gap: SealoSpacing.sm },
   addInput: {

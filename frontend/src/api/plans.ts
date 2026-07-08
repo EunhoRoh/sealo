@@ -18,6 +18,17 @@ export interface PlanItem {
   id: number;
   name: string;
   done: boolean;
+  scheduledDate: string | null; // "2026-08-15" — 있으면 캘린더/알람 대상 (Plan v2)
+  scheduledTime: string | null; // "10:00:00"
+}
+
+export interface UpcomingItem {
+  itemId: number;
+  name: string;
+  date: string;
+  time: string | null;
+  planTitle: string;
+  planIcon: string;
 }
 
 export interface PlanDetail {
@@ -50,6 +61,14 @@ export function usePlans() {
   return useQuery({
     queryKey: ["plans"],
     queryFn: async () => (await api.get<PlanSummary[]>("/api/plans")).data,
+  });
+}
+
+/** 다가오는 일정 항목 — 플랜 알람 동기화용 */
+export function useUpcomingItems() {
+  return useQuery({
+    queryKey: ["plans", "upcoming"],
+    queryFn: async () => (await api.get<UpcomingItem[]>("/api/plans/upcoming")).data,
   });
 }
 

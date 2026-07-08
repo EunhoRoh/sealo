@@ -26,4 +26,22 @@ public interface PlanItemRepository extends JpaRepository<PlanItem, Long> {
 
     @Query("select coalesce(max(i.sortOrder), 0) from PlanItem i where i.plan.id = :planId")
     int maxSortOrder(@Param("planId") Long planId);
+
+    /** 다가오는 일정 항목 — 플랜 알람/캘린더용 프로젝션 (docs/07) */
+    record UpcomingItem(Long itemId, String name, java.time.LocalDate date, java.time.LocalTime time,
+                        String planTitle, String planIcon) {
+    }
+
+    @Query("""
+            select new com.sealo.domain.plan.PlanItemRepository$UpcomingItem(
+                i.id, i.name, i.scheduledDate, i.scheduledTime, p.title, p.icon)
+            from PlanItem i
+            join i.plan p
+            where p.member.id = :memberId
+              and i.done = false
+              and i.scheduledDate is not null
+              and i.scheduledDate >= :from
+            order by i.scheduledDate, i.scheduledTime
+            """)
+    List<UpcomingItem> findUpcoming(@Param("memberId") Long memberId, @Param("from") java.time.LocalDate from);
 }

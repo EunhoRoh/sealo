@@ -8,6 +8,10 @@ public record PlanDraft(
         String title,
         String icon,
         LocalDate targetDate,
-        List<String> items
+        List<String> items,
+        /** 날짜/시간이 있는 일정 항목 (Plan v2) — 캘린더 표시 + 알람 대상 */
+        List<ScheduledItem> schedule
 ) {
+    public record ScheduledItem(String name, LocalDate date, java.time.LocalTime time) {
+    }
 }

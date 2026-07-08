@@ -25,6 +25,7 @@ import { SealCharacter, StampMark } from '@/components/seal-character';
 import { StampSplash } from '@/components/stamp-splash';
 import { sealLevel } from '@/constants/seal-growth';
 import { SealoColors, SealoShadow } from '@/constants/sealo-theme';
+import { usePlanAlarmSync } from '@/notifications/plan-alarms';
 import { silenceRoutineForToday, useRoutineAlarmSync } from '@/notifications/routine-alarms';
 
 const STAMP_RED = SealoColors.stampRed;
@@ -54,6 +55,7 @@ function sealMessage(routines: TodayRoutine[] | undefined): string {
 
 export default function HomeScreen() {
   useRoutineAlarmSync(); // 루틴 변경 시 로컬 알림 재등록
+  usePlanAlarmSync(); // 플랜 일정(여행 코스 등) 알람 동기화
   const { data: routines, isLoading, isError } = useTodayRoutines();
   const { data: allRoutines } = useRoutines();
   const { data: streak } = useStreak();

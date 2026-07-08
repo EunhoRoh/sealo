@@ -81,6 +81,35 @@ public class PlanService {
         return new ToggleResult(item.getId(), item.isDone(), total, done, bonus);
     }
 
+    public record ScheduledItemInput(String name, java.time.LocalDate date, java.time.LocalTime time) {
+    }
+
+    /** 날짜/시간이 있는 일정 항목 일괄 추가 (Plan v2, AI 생성기용) */
+    @Transactional
+    public void addScheduledItems(Long memberId, Long planId, List<ScheduledItemInput> inputs) {
+        if (inputs == null || inputs.isEmpty()) {
+            return;
+        }
+        Plan plan = getOwned(memberId, planId);
+        int order = planItemRepository.maxSortOrder(planId);
+        List<PlanItem> items = new java.util.ArrayList<>();
+        for (ScheduledItemInput input : inputs) {
+            items.add(PlanItem.builder()
+                    .plan(plan)
+                    .name(input.name())
+                    .sortOrder(++order)
+                    .scheduledDate(input.date())
+                    .scheduledTime(input.time())
+                    .build());
+        }
+        planItemRepository.saveAll(items);
+    }
+
+    /** 다가오는 일정 항목 (플랜 알람/캘린더용) */
+    public List<PlanItemRepository.UpcomingItem> getUpcoming(Long memberId, java.time.LocalDate from) {
+        return planItemRepository.findUpcoming(memberId, from);
+    }
+
     @Transactional
     public PlanDetailResponse.Item addItem(Long memberId, Long planId, String name) {
         Plan plan = getOwned(memberId, planId);
@@ -89,7 +118,8 @@ public class PlanService {
                 .name(name)
                 .sortOrder(planItemRepository.maxSortOrder(planId) + 1)
                 .build());
-        return new PlanDetailResponse.Item(item.getId(), item.getName(), item.isDone());
+        return new PlanDetailResponse.Item(item.getId(), item.getName(), item.isDone(),
+                item.getScheduledDate(), item.getScheduledTime());
     }
 
     @Transactional

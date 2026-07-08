@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { usePlans } from '@/api/plans';
 import { useCalendar, useStreak } from '@/api/routines';
 import { StampMark } from '@/components/seal-character';
 import { daysToNextLevel, sealLevel } from '@/constants/seal-growth';
@@ -38,6 +39,18 @@ export default function RecordsScreen() {
   const [monthKey, setMonthKey] = useState(() => toMonthKey(new Date()));
   const { data: calendar, isLoading } = useCalendar(monthKey);
   const { data: streak } = useStreak();
+  const { data: plans } = usePlans();
+
+  // 이 달의 플랜 D-day (여행 출발일 등) — 날짜 → 아이콘
+  const planDays = useMemo(() => {
+    const map = new Map<number, string>();
+    plans?.forEach((plan) => {
+      if (plan.targetDate?.startsWith(monthKey)) {
+        map.set(Number(plan.targetDate.slice(8, 10)), plan.icon);
+      }
+    });
+    return map;
+  }, [plans, monthKey]);
 
   const stampedDays = useMemo(() => {
     const map = new Map<number, number>();
@@ -127,6 +140,9 @@ export default function RecordsScreen() {
                   <>
                     <Text style={styles.cellDay}>{day}</Text>
                     {count > 0 && <StampMark />}
+                    {planDays.has(day) && (
+                      <Text style={styles.planIcon}>{planDays.get(day)}</Text>
+                    )}
                   </>
                 )}
               </View>
@@ -201,5 +217,6 @@ const styles = StyleSheet.create({
   },
   cellToday: { backgroundColor: SealoColors.todayHighlight },
   cellDay: { ...SealoType.caption, color: SealoColors.textPrimary, marginBottom: 2 },
+  planIcon: { fontSize: 11 },
   loading: { marginTop: SealoSpacing.xl },
 });

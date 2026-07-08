@@ -94,6 +94,27 @@ class AiPlanApiTest {
     }
 
     @Test
+    void 여행은_출발일이_있으면_일자별_일정과_짐싸기_알림이_생긴다() throws Exception {
+        String body = objectMapper.writeValueAsString(Map.of(
+                "type", "TRAVEL",
+                "answers", Map.of("destination", "제주", "days", "3", "companions", "가족",
+                        "startDate", java.time.LocalDate.now().plusDays(10).toString())
+        ));
+
+        mockMvc.perform(post("/api/ai/plans")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.plan.items[?(@.scheduledDate != null)]").exists())
+                .andExpect(jsonPath("$.plan.items[?(@.name =~ /.*짐 다 쌌어.*/)]").exists());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .get("/api/plans/upcoming"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThan(2)));
+    }
+
+    @Test
     void 지원하지_않는_타입은_400() throws Exception {
         String body = objectMapper.writeValueAsString(Map.of("type", "COOKING", "answers", Map.of()));
 

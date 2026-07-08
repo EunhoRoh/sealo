@@ -60,6 +60,12 @@ const GENTLE_STEPS: AlarmStep[] = [
 const idFor = (routineId: number, weekday: number, step: number) =>
   `r${routineId}-w${weekday}-s${step}`;
 
+export async function ensureNotificationsReady(): Promise<boolean> {
+  return ensureReady();
+}
+
+export { ANDROID_CHANNEL_ID };
+
 async function ensureReady(): Promise<boolean> {
   if (Platform.OS === 'web') return false; // 웹은 스케줄 알림 미지원
 
@@ -112,7 +118,13 @@ async function scheduleRoutine(routine: Routine): Promise<void> {
 
 export async function syncRoutineAlarms(routines: Routine[]): Promise<void> {
   if (!(await ensureReady())) return;
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  // 루틴 소유 알림만 취소 (플랜 알람 p*, 스누즈 등은 보존)
+  const all = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    all
+      .filter((n) => /^r\d+-/.test(n.identifier) || n.identifier === 'daily-streak-guard')
+      .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+  );
   for (const routine of routines) {
     await scheduleRoutine(routine);
   }

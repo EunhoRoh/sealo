@@ -57,9 +57,15 @@ public class AiPlanService {
         member.increaseAiPlanUses();
 
         PlanDraft draft = generator.generate(answers != null ? answers : Map.of());
-        PlanDetailResponse plan = planService.create(memberId, new PlanRequest(
+        PlanDetailResponse created = planService.create(memberId, new PlanRequest(
                 draft.title(), generator.theme(), draft.icon(), draft.targetDate(), draft.items()));
 
+        // 날짜 있는 일정 항목 추가 (Plan v2) → 캘린더 표시 + 프론트 로컬 알람 대상
+        planService.addScheduledItems(memberId, created.id(), draft.schedule().stream()
+                .map(s -> new PlanService.ScheduledItemInput(s.name(), s.date(), s.time()))
+                .toList());
+
+        PlanDetailResponse plan = planService.getDetail(memberId, created.id());
         return new AiPlanResult(plan, free, paid, member.getShellBalance());
     }
 }

@@ -41,12 +41,22 @@ public class PlanItem extends BaseTimeEntity {
     @Column(nullable = false)
     private int sortOrder;
 
+    /** 일정 날짜/시간 (Plan v2) — 있으면 캘린더 표시 + 알람 대상 */
+    @Column
+    private java.time.LocalDate scheduledDate;
+
+    @Column
+    private java.time.LocalTime scheduledTime;
+
     @Builder
-    private PlanItem(Plan plan, String name, int sortOrder) {
+    private PlanItem(Plan plan, String name, int sortOrder,
+                     java.time.LocalDate scheduledDate, java.time.LocalTime scheduledTime) {
         this.plan = plan;
         this.name = name;
         this.sortOrder = sortOrder;
         this.done = false;
+        this.scheduledDate = scheduledDate;
+        this.scheduledTime = scheduledTime;
     }
 
     public void toggle() {

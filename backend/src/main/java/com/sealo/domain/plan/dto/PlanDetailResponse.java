@@ -15,7 +15,8 @@ public record PlanDetailResponse(
         boolean rewarded,
         List<Item> items
 ) {
-    public record Item(Long id, String name, boolean done) {
+    public record Item(Long id, String name, boolean done,
+                       java.time.LocalDate scheduledDate, java.time.LocalTime scheduledTime) {
     }
 
     public static PlanDetailResponse of(Plan plan, List<PlanItem> items) {
@@ -26,7 +27,10 @@ public record PlanDetailResponse(
                 plan.getIcon(),
                 plan.getTargetDate(),
                 plan.isRewarded(),
-                items.stream().map(i -> new Item(i.getId(), i.getName(), i.isDone())).toList()
+                items.stream()
+                        .map(i -> new Item(i.getId(), i.getName(), i.isDone(),
+                                i.getScheduledDate(), i.getScheduledTime()))
+                        .toList()
         );
     }
 }
