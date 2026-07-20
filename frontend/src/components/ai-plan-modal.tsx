@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+
+import { BottomSheet } from '@/components/bottom-sheet';
 
 import { AI_PLAN_COST_SHELLS, useGenerateAiPlan } from '@/api/ai';
 import { useMe } from '@/api/shop';
@@ -112,9 +113,7 @@ export function AiPlanModal({ visible, onClose, onCreated }: Props) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={styles.sheet}>
+    <BottomSheet visible={visible} onClose={onClose} minHeight={380}>
           {phase === 'pick' && (
             <>
               <Text style={styles.title}>물범에게 부탁하기 ✨</Text>
@@ -211,22 +210,11 @@ export function AiPlanModal({ visible, onClose, onCreated }: Props) {
               <Text style={styles.workingHint}>물범이 계획서를 물고 오고 있어요</Text>
             </View>
           )}
-        </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: SealoColors.backdrop },
-  sheet: {
-    backgroundColor: SealoColors.surface,
-    borderTopLeftRadius: SealoRadius.lg,
-    borderTopRightRadius: SealoRadius.lg,
-    padding: SealoSpacing.lg,
-    gap: SealoSpacing.md,
-    minHeight: 380,
-  },
   title: { ...SealoType.section, textAlign: 'center' },
   subtitle: { textAlign: 'center', color: SealoColors.textSecondary, fontSize: 13 },
   specGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SealoSpacing.sm, justifyContent: 'center' },

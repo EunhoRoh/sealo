@@ -59,6 +59,7 @@ export function useStampRoutine() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["routines", "today"] });
       queryClient.invalidateQueries({ queryKey: ["stamps"] }); // 캘린더·스트릭 갱신
+      queryClient.invalidateQueries({ queryKey: ["members", "me"] }); // 조개 잔액 갱신 (docs/13 점검)
     },
   });
 }

@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
   FlatList,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,6 +8,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+
+import { BottomSheet } from '@/components/bottom-sheet';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -198,9 +199,7 @@ function PlanDetailModal({ planId, onClose }: { planId: number | null; onClose: 
   };
 
   return (
-    <Modal visible={planId != null} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalBackdrop}>
-        <View style={styles.modalSheet}>
+    <BottomSheet visible={planId != null} onClose={onClose}>
           {plan && (
             <>
               <View style={styles.detailHeader}>
@@ -297,9 +296,7 @@ function PlanDetailModal({ planId, onClose }: { planId: number | null; onClose: 
             </>
           )}
           <StampSplash visible={celebrate} onDone={() => setCelebrate(false)} />
-        </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
@@ -334,9 +331,7 @@ function CreatePlanModal({ visible, onClose }: { visible: boolean; onClose: () =
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalBackdrop}>
-        <View style={styles.modalSheet}>
+    <BottomSheet visible={visible} onClose={onClose}>
           <Text style={styles.detailTitle}>새 플랜</Text>
 
           <View style={styles.templateRow}>
@@ -384,9 +379,7 @@ function CreatePlanModal({ visible, onClose }: { visible: boolean; onClose: () =
               <Text style={styles.saveButtonText}>만들기</Text>
             </Pressable>
           </View>
-        </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 

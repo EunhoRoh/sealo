@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+
+import { BottomSheet } from '@/components/bottom-sheet';
 
 import {
   AlarmType,
@@ -82,9 +84,7 @@ export function RoutineFormModal({ visible, editing, onClose }: Props) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={styles.sheet}>
+    <BottomSheet visible={visible} onClose={onClose}>
           <Text style={styles.title}>{editing ? '루틴 수정' : '루틴 만들기'}</Text>
 
           <TextInput
@@ -144,21 +144,11 @@ export function RoutineFormModal({ visible, editing, onClose }: Props) {
               </Pressable>
             </View>
           </View>
-        </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: SealoColors.backdrop },
-  sheet: {
-    backgroundColor: SealoColors.surface,
-    borderTopLeftRadius: SealoRadius.lg,
-    borderTopRightRadius: SealoRadius.lg,
-    padding: SealoSpacing.lg,
-    gap: SealoSpacing.md,
-  },
   title: { ...SealoType.section },
   input: {
     borderWidth: SealoBorder.width,

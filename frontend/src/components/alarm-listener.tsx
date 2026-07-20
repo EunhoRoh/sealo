@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useStampRoutine } from '@/api/routines';
 import { SealCharacter } from '@/components/seal-character';
@@ -53,6 +53,16 @@ export function AlarmListener() {
     return () => sub.remove();
   }, []);
 
+  // Android 하드웨어 뒤로가기 = 알람 화면 닫기 (docs/13 점검)
+  useEffect(() => {
+    if (!alarm || Platform.OS !== 'android') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setAlarm(null);
+      return true;
+    });
+    return () => sub.remove();
+  }, [alarm]);
+
   if (!alarm) return null;
 
   const onStamp = () => {
@@ -86,6 +96,9 @@ export function AlarmListener() {
         </Pressable>
         <Pressable style={styles.snoozeButton} onPress={onSnooze} hitSlop={8}>
           <Text style={styles.snoozeText}>5분만… (물범이 시무룩해져요)</Text>
+        </Pressable>
+        <Pressable style={styles.snoozeButton} onPress={() => setAlarm(null)} hitSlop={8}>
+          <Text style={styles.closeText}>그냥 닫기</Text>
         </Pressable>
       </View>
 
@@ -124,4 +137,5 @@ const styles = StyleSheet.create({
   stampButtonText: { fontSize: 20, fontWeight: '800', color: SealoColors.surface },
   snoozeButton: { alignItems: 'center', paddingVertical: SealoSpacing.sm },
   snoozeText: { ...SealoType.caption, color: SealoColors.textSecondary, fontSize: 14 },
+  closeText: { ...SealoType.caption, color: SealoColors.disabled, fontSize: 13 },
 });
