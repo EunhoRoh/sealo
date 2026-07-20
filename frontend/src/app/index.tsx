@@ -20,11 +20,13 @@ import {
   useTodayRoutines,
 } from '@/api/routines';
 import { useEquippedAccessory, useMe } from '@/api/shop';
+import { BottomSheet } from '@/components/bottom-sheet';
 import { RoutineFormModal } from '@/components/routine-form-modal';
 import { SealCharacter, StampMark } from '@/components/seal-character';
 import { StampSplash } from '@/components/stamp-splash';
 import { sealLevel } from '@/constants/seal-growth';
 import { SealoColors, SealoShadow } from '@/constants/sealo-theme';
+import { useFocusStore } from '@/focus/focus-session';
 import { usePlanAlarmSync } from '@/notifications/plan-alarms';
 import { silenceRoutineForToday, useRoutineAlarmSync } from '@/notifications/routine-alarms';
 
@@ -67,6 +69,8 @@ export default function HomeScreen() {
   const [formVisible, setFormVisible] = useState(false);
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   const [showSplash, setShowSplash] = useState(false);
+  const [showFocus, setShowFocus] = useState(false);
+  const startFocus = useFocusStore((s) => s.start);
 
   const bubbleMessage = useMemo(() => sealMessage(routines), [routines]);
 
@@ -150,14 +154,19 @@ export default function HomeScreen() {
 
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>오늘의 루틴</Text>
-        <Pressable
-          onPress={() => {
-            setEditingRoutine(null);
-            setFormVisible(true);
-          }}
-          hitSlop={8}>
-          <Text style={styles.addButton}>+ 추가</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable onPress={() => setShowFocus(true)} hitSlop={8}>
+            <Text style={styles.focusEntryText}>🎯 집중</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setEditingRoutine(null);
+              setFormVisible(true);
+            }}
+            hitSlop={8}>
+            <Text style={styles.addButton}>+ 추가</Text>
+          </Pressable>
+        </View>
       </View>
 
       {isLoading && <ActivityIndicator style={styles.center} />}
@@ -201,6 +210,27 @@ export default function HomeScreen() {
           </Pressable>
         )}
       />
+
+      <BottomSheet visible={showFocus} onClose={() => setShowFocus(false)}>
+        <Text style={styles.listTitle}>🎯 집중 모드</Text>
+        <Text style={styles.focusDesc}>
+          물범과 함께 집중해요. 도중에 폰을 보면 물범이 알아요 👀{'\n'}
+          포기하면 조개 50개를 물범이 가져갑니다.
+        </Text>
+        <View style={styles.focusChips}>
+          {[15, 25, 50].map((minutes) => (
+            <Pressable
+              key={minutes}
+              style={styles.focusChip}
+              onPress={() => {
+                startFocus(minutes);
+                setShowFocus(false);
+              }}>
+              <Text style={styles.focusChipText}>{minutes}분</Text>
+            </Pressable>
+          ))}
+        </View>
+      </BottomSheet>
 
       <RoutineFormModal
         visible={formVisible}
@@ -279,6 +309,19 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   listTitle: { fontSize: 18, fontWeight: '700' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  focusEntryText: { fontSize: 15, fontWeight: '600', color: SealoColors.ink },
+  focusDesc: { fontSize: 13, color: SealoColors.textSecondary, lineHeight: 20 },
+  focusChips: { flexDirection: 'row', gap: 10, marginBottom: 8 },
+  focusChip: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: SealoColors.ink,
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  focusChipText: { fontSize: 16, fontWeight: '700', color: SealoColors.ink },
   addButton: { fontSize: 15, fontWeight: '600', color: STAMP_RED },
   listContent: { paddingHorizontal: 20, paddingVertical: 8, gap: 8 },
   routineRow: {

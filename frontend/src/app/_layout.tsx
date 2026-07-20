@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { AlarmListener } from '@/components/alarm-listener';
+import { FocusOverlay } from '@/components/focus-overlay';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { Onboarding } from '@/components/onboarding';
@@ -40,6 +41,7 @@ export default function TabLayout() {
           <>
             <AppTabs />
             <AlarmListener />
+            <FocusOverlay />
           </>
         ) : null}
       </ThemeProvider>
